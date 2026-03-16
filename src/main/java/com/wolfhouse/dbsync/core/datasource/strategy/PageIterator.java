@@ -13,25 +13,25 @@ import java.util.List;
  */
 public class PageIterator<T> implements Iterator<List<T>> {
     private final int          pageSize;
-    private final int          total;
+    private final long         total;
     private final QueryWrapper wrapper;
     private final String       tableName;
     private       int          pageNum = 1;
 
-    private PageIterator(int pageSize, int total, QueryWrapper queryWrapper, String tableName) {
+    private PageIterator(int pageSize, long total, QueryWrapper queryWrapper, String tableName) {
         this.pageSize  = pageSize;
         this.total     = total;
         this.wrapper   = queryWrapper;
         this.tableName = tableName;
     }
 
-    public static <T> PageIterator<T> of(int pageSize, int total, QueryWrapper queryWrapper, String tableName) {
+    public static <T> PageIterator<T> of(int pageSize, long total, QueryWrapper queryWrapper, String tableName) {
         return new PageIterator<>(pageSize, total, queryWrapper, tableName);
     }
 
     @Override
     public boolean hasNext() {
-        return (pageNum - 1) * pageSize < total;
+        return (long) (pageNum - 1) * pageSize < total;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.wolfhouse.dbsync.core.datasource.strategy;
 
 import com.mybatisflex.core.MybatisFlexBootstrap;
+import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
 import com.mybatisflex.core.row.Row;
 import com.wolfhouse.dbsync.properties.BaseDbProperty;
@@ -49,22 +50,43 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
 
     @Override
     public List<Map<String, Object>> queryBatch(String tableName, int pageSize, int pageNum) {
-        return List.of();
+        return Db.paginate(tableName, pageNum, pageSize, QueryWrapper.create())
+                 .getRecords()
+                 .stream()
+                 .map(Row::toCamelKeysMap)
+                 .toList();
     }
 
     @Override
     public PageIterator<Map<String, Object>> page(String tableName, Integer pageSize) {
-        return null;
+        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create(), tableName);
     }
 
     @Override
     public long count(String tableName) {
-        return 0;
+        return Db.selectCountByQuery(tableName, QueryWrapper.create());
     }
 
     @Override
     public Set<String> tableNames() {
-        return Set.of();
+        // 执行原生的 SHOW TABLES 语句
+        List<String> tables = Db.selectListBySql("SHOW TABLES")
+                                .stream()
+                                .map(map -> map.values().iterator().next().toString())
+                                .toList();
+
+        return Set.copyOf(tables);
+    }
+
+    @Override
+    public Set<String> columnNames(String tableName) {
+        List<Row> rows = Db.selectListBySql("SHOW COLUMNS FROM `%s`".formatted(tableName));
+        if (CollectionUtils.isEmpty(rows)) {
+            return Set.of();
+        }
+        return Set.copyOf(rows.stream()
+                              .map(r -> String.valueOf(r.toCamelKeysMap().get("field")))
+                              .toList());
     }
 
     @Override
@@ -79,7 +101,12 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
 
     @Override
     public TableInfo getTableInfo(String tableName) {
-        return null;
+        return new TableInfo(tableName, count(tableName), columnNames(tableName).toArray(String[]::new));
+    }
+
+    @Override
+    public boolean hasTable(String tableName) {
+        return tableNames().contains(tableName);
     }
 
     @Override
@@ -102,7 +129,7 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE TABLE IF NOT EXISTS `%s` (\n".formatted(tableName))
           .append("  `id` bigint NOT NULL AUTO_INCREMENT,\n");
-        cols.forEach(col -> sb.append("  `%s` varchar(255) NOT NULL,\n".formatted(col)));
+        cols.forEach(col -> sb.append("  `%s` varchar(255) NULL,\n".formatted(col)));
         sb.append("  PRIMARY KEY (`id`)\n");
         sb.append(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;");
         return sb.toString();

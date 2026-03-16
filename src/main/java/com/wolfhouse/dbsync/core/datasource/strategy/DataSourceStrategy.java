@@ -1,7 +1,9 @@
 package com.wolfhouse.dbsync.core.datasource.strategy;
 
 import com.wolfhouse.dbsync.properties.BaseDbProperty;
+import org.jspecify.annotations.NonNull;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -57,6 +59,14 @@ public interface DataSourceStrategy<R> {
     Set<String> tableNames();
 
     /**
+     * 获取指定表中所有列名
+     *
+     * @param tableName 数据表名
+     * @return 列名集合
+     */
+    Set<String> columnNames(String tableName);
+
+    /**
      * 判断当前策略是否支持指定的数据源类型
      *
      * @param prop 数据源连接信息
@@ -97,11 +107,29 @@ public interface DataSourceStrategy<R> {
     Collection<R> queryAll(String tableName);
 
     /**
+     * 查询是否有指定表
+     *
+     * @param tableName 表名
+     *
+     */
+    boolean hasTable(String tableName);
+
+    /**
      * 表信息封装
      *
      * @param name  表名
      * @param count 总记录行数
      * @param cols  列名
      */
-    record TableInfo(String name, long count, String... cols) {}
+    record TableInfo(String name, long count, String... cols) {
+        @Override
+        @NonNull
+        public String toString() {
+            return "TableInfo{" +
+                    "name='" + name + '\'' +
+                    ", count=" + count +
+                    ", cols=" + Arrays.toString(cols) +
+                    '}';
+        }
+    }
 }

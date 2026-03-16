@@ -71,6 +71,11 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
     }
 
     @Override
+    public Set<String> columnNames(String tableName) {
+        return Set.of();
+    }
+
+    @Override
     public boolean propertySupport(BaseDbProperty prop) {
         return prop instanceof InfluxProperty;
     }
@@ -83,6 +88,11 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
     @Override
     public TableInfo getTableInfo(String tableName) {
         return null;
+    }
+
+    @Override
+    public boolean hasTable(String tableName) {
+        return false;
     }
 
     @Override
