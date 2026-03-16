@@ -60,6 +60,19 @@ public class DatasourceInitializer {
         // 2. 加载目标数据源
         context.destStrategy(initAndGetDatasource(syncProperty.getDb().dest(), syncProperty.getCore().descType()));
         log.debug("目标数据源已加载: {}", context.destStrategy());
+        // 3. 检查兼容性
+        if (!context.sourceStrategy().strategySupport(context.destStrategy())) {
+            throw new UnsupportedOperationException("不兼容的数据源策略! source: %s, dest: %s".formatted(context.sourceStrategy(), context.destStrategy()));
+        }
+        // 4. 加载配置
+        loadConfig();
+    }
+
+    /** 加载事务、分页、核心配置 */
+    private void loadConfig() {
+        context.transaction(syncProperty.getTransaction());
+        context.pagination(syncProperty.getPagination());
+        context.core(syncProperty.getCore());
     }
 
     /**

@@ -3,6 +3,8 @@ package com.wolfhouse.dbsync.core.datasource.strategy;
 import com.wolfhouse.dbsync.properties.BaseDbProperty;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 数据源策略，规范要处理的数据库的操作
@@ -16,15 +18,7 @@ public interface DataSourceStrategy<R> {
      * @param prop 数据源连接信息
      * @return 是否初始化成功
      */
-    boolean initDatasource(BaseDbProperty prop);
-
-    /**
-     * 执行数据迁移
-     *
-     * @param destStrategy 目标数据源策略
-     * @return 是否迁移成功
-     */
-    boolean performMigration(DataSourceStrategy<?> destStrategy);
+    void initDatasource(BaseDbProperty prop);
 
     /**
      * 批量插入数据
@@ -43,7 +37,9 @@ public interface DataSourceStrategy<R> {
      * @param pageNum   页码
      * @return 查询到的数据集合
      */
-    Collection<R> selectBatch(String tableName, int pageSize, int pageNum);
+    List<R> queryBatch(String tableName, int pageSize, int pageNum);
+
+    PageIterator<R> page(String tableName, Integer pageSize);
 
     /**
      * 获取数据源中的数据总量
@@ -58,7 +54,7 @@ public interface DataSourceStrategy<R> {
      *
      * @return 数据表名集合
      */
-    Collection<String> tableNames();
+    Set<String> tableNames();
 
     /**
      * 判断当前策略是否支持指定的数据源类型
@@ -66,7 +62,15 @@ public interface DataSourceStrategy<R> {
      * @param prop 数据源连接信息
      * @return 是否支持
      */
-    boolean isSupport(BaseDbProperty prop);
+    boolean propertySupport(BaseDbProperty prop);
+
+    /**
+     * 判断当前策略是否支持指定的策略类型
+     *
+     * @param strategy 数据源策略类型
+     * @return 是否支持
+     */
+    boolean strategySupport(DataSourceStrategy<?> strategy);
 
     /**
      * 获取指定表的表信息封装
@@ -76,6 +80,21 @@ public interface DataSourceStrategy<R> {
      */
     TableInfo getTableInfo(String tableName);
 
+    /**
+     * 创建表结构
+     *
+     * @param name 表名
+     * @param cols 列集合
+     */
+    void createSchema(String name, Collection<String> cols);
+
+    /**
+     * 全量查询指定表的所有记录
+     *
+     * @param tableName 表名
+     * @return 记录集合
+     */
+    Collection<R> queryAll(String tableName);
 
     /**
      * 表信息封装

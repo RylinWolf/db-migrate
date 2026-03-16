@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 @EqualsAndHashCode(callSuper = false)
 public class InfluxProperty extends BaseDbProperty {
     private String host  = "localhost";
-    private String port  = "8188";
+    private String port  = "8181";
     private String token = System.getenv("INFLUX_TOKEN");
+    private String database;
 }

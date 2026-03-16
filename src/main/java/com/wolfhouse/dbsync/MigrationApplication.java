@@ -1,6 +1,6 @@
 package com.wolfhouse.dbsync;
 
-import com.wolfhouse.dbsync.core.MigrationExecutor;
+import com.wolfhouse.dbsync.core.SyncExecutor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -13,6 +13,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 public class MigrationApplication {
     public static void main(String[] args) throws Exception {
         ConfigurableApplicationContext context  = SpringApplication.run(MigrationApplication.class, args);
-        MigrationExecutor              executor = context.getBean(MigrationExecutor.class);
+        SyncExecutor                   executor = context.getBean(SyncExecutor.class);
+        System.out.println(executor.getContext().destStrategy().tableNames());
     }
 }

@@ -1,6 +1,7 @@
 package com.wolfhouse.dbsync.core;
 
 import com.wolfhouse.dbsync.core.datasource.strategy.DataSourceStrategy;
+import com.wolfhouse.dbsync.properties.SyncProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,12 @@ public class DatasourceContext {
     private DataSourceStrategy<?>                     destStrategy;
     /** 目标表映射 */
     private Map<String, DataSourceStrategy.TableInfo> destTableMap;
-    /** 上下文就绪 */
+    /** 事务配置 */
+    private SyncProperty.Transaction                  transaction;
+    /** 分页配置 */
+    private SyncProperty.Pagination                   pagination;
+    /** 核心配置 */
+    private SyncProperty.Core                         core;
+    /** 上下文就绪状态 */
     private boolean                                   ready;
 }
