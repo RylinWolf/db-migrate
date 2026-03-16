@@ -14,6 +14,5 @@ public class MigrationApplication {
     public static void main(String[] args) throws Exception {
         ConfigurableApplicationContext context  = SpringApplication.run(MigrationApplication.class, args);
         SyncExecutor                   executor = context.getBean(SyncExecutor.class);
-        System.out.println(executor.getContext().destStrategy().tableNames());
     }
 }
