@@ -1,6 +1,6 @@
 package com.wolfhouse.dbsync.core;
 
-import com.wolfhouse.dbsync.core.datasource.strategy.DataSourceStrategy;
+import com.wolfhouse.dbsync.core.datasource.template.BaseDataSourceTemplate;
 import com.wolfhouse.dbsync.properties.MigrateProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -18,19 +18,19 @@ import java.util.Map;
 @Accessors(fluent = true)
 public class DatasourceContext {
     /** 源数据源 */
-    private DataSourceStrategy<?>                     sourceStrategy;
+    private BaseDataSourceTemplate<?>                     sourceStrategy;
     /** 目标数据源 */
-    private DataSourceStrategy<?>                     destStrategy;
+    private BaseDataSourceTemplate<?>                     destStrategy;
     /** 目标表映射 */
-    private Map<String, DataSourceStrategy.TableInfo> targetTableMap;
+    private Map<String, BaseDataSourceTemplate.TableInfo> targetTableMap;
     /** 事务配置 */
-    private MigrateProperty.Transaction               transaction;
+    private MigrateProperty.Transaction                   transaction;
     /** 分页配置 */
-    private MigrateProperty.Pagination                pagination;
+    private MigrateProperty.Pagination                    pagination;
     /** 核心配置 */
-    private MigrateProperty.Core                      core;
+    private MigrateProperty.Core                          core;
     /** 字段配置 */
-    private MigrateProperty.Field                     field;
+    private MigrateProperty.Field                         field;
     /** 上下文就绪状态 */
-    private boolean                                   ready;
+    private boolean                                       ready;
 }

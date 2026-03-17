@@ -1,4 +1,4 @@
-package com.wolfhouse.dbsync.core.datasource.strategy;
+package com.wolfhouse.dbsync.core.datasource.template;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.MybatisFlexBootstrap;
@@ -9,13 +9,17 @@ import com.wolfhouse.dbsync.properties.BaseDbProperty;
 import com.wolfhouse.dbsync.properties.MySqlProperty;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.logging.slf4j.Slf4jImpl;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * MySQL 数据源
@@ -24,14 +28,14 @@ import java.util.*;
  */
 @Slf4j
 @Accessors(fluent = true)
-public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
+public class MySqlSource extends BaseDataSourceTemplate<Map<String, Object>> {
     private final ObjectMapper objectMapper;
+    @Setter
     @Getter
-    private final Set<String>  ignore;
+    private       boolean      ignoreNull = false;
 
     public MySqlSource(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        ignore            = new HashSet<>();
     }
 
     @Override
@@ -57,7 +61,7 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
             List<Row> rowList = data.stream().map(m -> {
                 Row row = new Row();
                 // 排除忽略字段
-                ignore.forEach(m::remove);
+                processIgnore(m, true);
                 row.putAll(m);
                 return row;
             }).toList();
@@ -77,7 +81,7 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
                  .map(r -> {
                      // 排除忽略字段
                      Map<String, Object> map = r.toCamelKeysMap();
-                     ignore.forEach(map::remove);
+                     processIgnore(map, true);
                      return map;
                  })
                  .toList();
@@ -121,7 +125,7 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
     }
 
     @Override
-    public boolean strategySupport(DataSourceStrategy<?> strategy) {
+    public boolean strategySupport(BaseDataSourceTemplate<?> strategy) {
         return StrategySupports.MYSQL.contains(strategy.getClass());
     }
 
@@ -150,15 +154,10 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
                  .map(r -> {
                      // 移除排除字段
                      Map<String, Object> map = r.toCamelKeysMap();
-                     ignore.forEach(map::remove);
+                     processIgnore(map, true);
                      return map;
                  })
                  .toList();
-    }
-
-    @Override
-    public void setIgnore(Collection<String> ignore) {
-        this.ignore.addAll(ignore);
     }
 
     private String buildTable(String tableName, Collection<String> cols) {

@@ -3,8 +3,8 @@ package com.wolfhouse.dbsync.core;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.row.Db;
-import com.wolfhouse.dbsync.core.datasource.strategy.DataSourceStrategy;
-import com.wolfhouse.dbsync.core.datasource.strategy.PageIterator;
+import com.wolfhouse.dbsync.core.datasource.template.BaseDataSourceTemplate;
+import com.wolfhouse.dbsync.core.datasource.template.PageIterator;
 import com.wolfhouse.dbsync.enums.TransactionGranularityEnum;
 import com.wolfhouse.dbsync.properties.MigrateProperty;
 import jakarta.annotation.PostConstruct;
@@ -80,13 +80,14 @@ public class MigrateExecutor {
     @PreDestroy
     public void destroy() {
         this.taskExecutor.shutdown();
+        log.debug("线程池已关闭");
     }
 
     /** 执行同步 */
     public void doSynchronize() {
         log.info("开始数据同步");
-        DataSourceStrategy<?>      source   = context.sourceStrategy();
-        DataSourceStrategy<?>      dest     = context.destStrategy();
+        BaseDataSourceTemplate<?>  source   = context.sourceStrategy();
+        BaseDataSourceTemplate<?>  dest     = context.destStrategy();
         MigrateProperty.Pagination pageConf = context.pagination();
 
         // 遍历表信息映射，事务级别 任务
@@ -99,8 +100,6 @@ public class MigrateExecutor {
                         () -> syncTable(table, dest, pageConf, source))));
         // 阻塞等待所有任务完成
         CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new)).join();
-        // 关闭线程池
-        destroy();
         log.info("数据同步结束");
     }
 
@@ -112,7 +111,7 @@ public class MigrateExecutor {
      * @param pageConf 分页配置，包含分页启用状态、每页大小及分页触发阈值。
      * @param source   源数据源策略，用于执行读取操作。
      */
-    private void syncTable(DataSourceStrategy.TableInfo table, DataSourceStrategy<?> dest, MigrateProperty.Pagination pageConf, DataSourceStrategy<?> source) {
+    private void syncTable(BaseDataSourceTemplate.TableInfo table, BaseDataSourceTemplate<?> dest, MigrateProperty.Pagination pageConf, BaseDataSourceTemplate<?> source) {
         String tableName = table.name();
 
         // 表记录不存在，仅构建架构
@@ -160,7 +159,7 @@ public class MigrateExecutor {
      * @param data      数据集合，包含待写入的数据记录。
      * @param <T>       泛型类型参数，表示数据集合中元素的类型。
      */
-    private <T> void syncBatch(DataSourceStrategy<T> dest, String tableName, java.util.Collection<?> data) {
+    private <T> void syncBatch(BaseDataSourceTemplate<T> dest, String tableName, java.util.Collection<?> data) {
         wrapTransaction(TransactionGranularityEnum.PAGE, () -> {
             Collection<T> convertedData = objectMapper.convertValue(data, new TypeReference<>() {});
             if (!dest.insertBatch(tableName, convertedData)) {

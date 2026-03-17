@@ -1,4 +1,4 @@
-package com.wolfhouse.dbsync.core.datasource.strategy;
+package com.wolfhouse.dbsync.core.datasource.template;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.influxdb.v3.client.InfluxDBClient;
@@ -19,15 +19,13 @@ import java.util.*;
  * @author Rylin Wolf
  */
 @Slf4j
-public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
+public class InfluxSource extends BaseDataSourceTemplate<Map<String, Object>> {
     private final ObjectMapper objectMapper;
-    private final Set<String>  ignore;
     /** Influx 客户端 */
     private       InfluxClient client;
 
     public InfluxSource(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        ignore            = new HashSet<>();
     }
 
     @Override
@@ -52,9 +50,9 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
             List<AbstractActionInfluxObj> objs = new ArrayList<>();
             data.forEach(m -> objs.add(new AbstractActionInfluxObj() {{
                 // 移除排除字段
-                ignore.forEach(m::remove);
+                Map<String, Object> ignoredMap = processIgnore(m, false);
                 // 设置字段
-                addFields(InfluxFields.of(m));
+                addFields(InfluxFields.of(ignoredMap));
                 // 初始化标签
                 this.tags = InfluxTags.instance();
                 // 设置表名
@@ -76,7 +74,7 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
         return res.records().stream().map(r -> {
             List<Map<String, Object>> map = r.toMap();
             // 移除排除字段
-            map.forEach(m -> ignore.forEach(m::remove));
+            map.forEach(m -> processIgnore(m, true));
             return map;
         }).flatMap(List::stream).toList();
     }
@@ -89,7 +87,8 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
     @Override
     public Collection<Map<String, Object>> queryAll(String tableName) {
         List<Map<String, Object>> maps = client.queryMap(client.addQueryAll(InfluxQueryWrapper.create(tableName)));
-        maps.forEach(m -> ignore.forEach(m::remove));
+        maps.forEach(m -> processIgnore(m, true));
+
         return maps;
     }
 
@@ -114,7 +113,7 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
     }
 
     @Override
-    public boolean strategySupport(DataSourceStrategy<?> strategy) {
+    public boolean strategySupport(BaseDataSourceTemplate<?> strategy) {
         return StrategySupports.INFLUX.contains(strategy.getClass());
     }
 
@@ -131,11 +130,6 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
     @Override
     public void createSchema(String name, Collection<String> cols) {
         throw new UnsupportedOperationException("Influx 数据源不支持创建表架构");
-    }
-
-    @Override
-    public void setIgnore(Collection<String> ignore) {
-        this.ignore.addAll(ignore);
     }
 
     /**

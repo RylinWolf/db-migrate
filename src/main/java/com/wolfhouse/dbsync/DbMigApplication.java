@@ -1,7 +1,7 @@
 package com.wolfhouse.dbsync;
 
 import com.wolfhouse.dbsync.core.MigrateExecutor;
-import com.wolfhouse.dbsync.core.datasource.strategy.DataSourceStrategy;
+import com.wolfhouse.dbsync.core.datasource.template.BaseDataSourceTemplate;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -17,10 +17,11 @@ public class DbMigApplication {
     public static void main(String[] args) throws Exception {
         ConfigurableApplicationContext context  = SpringApplication.run(DbMigApplication.class, args);
         MigrateExecutor                executor = context.getBean(MigrateExecutor.class);
-        DataSourceStrategy<?>          source   = executor.getContext().sourceStrategy();
-        DataSourceStrategy<?>          dest     = executor.getContext().destStrategy();
+        BaseDataSourceTemplate<?>      source   = executor.getContext().sourceStrategy();
+        BaseDataSourceTemplate<?>      dest     = executor.getContext().destStrategy();
 
         executor.doSynchronize();
+        context.close();
         //if (!source.hasTable("testTable")) {
         //    source.createSchema("testTable", Set.of("name"))
         //}
@@ -51,8 +52,8 @@ public class DbMigApplication {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> void insert(DataSourceStrategy<?> source, Collection<T> data) {
-        DataSourceStrategy<T> tSource = (DataSourceStrategy<T>) source;
+    public static <T> void insert(BaseDataSourceTemplate<?> source, Collection<T> data) {
+        BaseDataSourceTemplate<T> tSource = (BaseDataSourceTemplate<T>) source;
         if (tSource.insertBatch("testTable", data)) {
             System.out.println("插入成功");
             return;

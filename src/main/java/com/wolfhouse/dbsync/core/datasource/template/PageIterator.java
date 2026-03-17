@@ -1,4 +1,4 @@
-package com.wolfhouse.dbsync.core.datasource.strategy;
+package com.wolfhouse.dbsync.core.datasource.template;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
