@@ -6,7 +6,7 @@ import com.mybatisflex.core.row.Db;
 import com.wolfhouse.dbsync.core.datasource.strategy.DataSourceStrategy;
 import com.wolfhouse.dbsync.core.datasource.strategy.PageIterator;
 import com.wolfhouse.dbsync.enums.TransactionGranularityEnum;
-import com.wolfhouse.dbsync.properties.SyncProperty;
+import com.wolfhouse.dbsync.properties.MigrateProperty;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.Data;
@@ -33,8 +33,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 @Data
 @Slf4j
-@SuppressWarnings({"unchecked"})
-public class SyncExecutor {
+public class MigrateExecutor {
     /** 数据源上下文 */
     private final DatasourceContext            context;
     private final DefaultTransactionDefinition defaultTransactionDefinition;
@@ -86,9 +85,9 @@ public class SyncExecutor {
     /** 执行同步 */
     public void doSynchronize() {
         log.info("开始数据同步");
-        DataSourceStrategy<?>   source   = context.sourceStrategy();
-        DataSourceStrategy<?>   dest     = context.destStrategy();
-        SyncProperty.Pagination pageConf = context.pagination();
+        DataSourceStrategy<?>      source   = context.sourceStrategy();
+        DataSourceStrategy<?>      dest     = context.destStrategy();
+        MigrateProperty.Pagination pageConf = context.pagination();
 
         // 遍历表信息映射，事务级别 任务
         wrapTransaction(TransactionGranularityEnum.TASK, () -> context
@@ -113,7 +112,7 @@ public class SyncExecutor {
      * @param pageConf 分页配置，包含分页启用状态、每页大小及分页触发阈值。
      * @param source   源数据源策略，用于执行读取操作。
      */
-    private void syncTable(DataSourceStrategy.TableInfo table, DataSourceStrategy<?> dest, SyncProperty.Pagination pageConf, DataSourceStrategy<?> source) {
+    private void syncTable(DataSourceStrategy.TableInfo table, DataSourceStrategy<?> dest, MigrateProperty.Pagination pageConf, DataSourceStrategy<?> source) {
         String tableName = table.name();
 
         // 表记录不存在，仅构建架构
@@ -177,7 +176,7 @@ public class SyncExecutor {
      */
     private void wrapTransaction(TransactionGranularityEnum currentLevel, Runnable runnable) {
         // 未开启事务 或 当前级别不匹配
-        SyncProperty.Transaction config = context.transaction();
+        MigrateProperty.Transaction config = context.transaction();
         if (!config.enable() || !config.gran().equals(currentLevel)) {
             runnable.run();
             return;

@@ -1,7 +1,7 @@
 package com.wolfhouse.dbsync.properties;
 
 import com.wolfhouse.dbsync.enums.DbTypeEnum;
-import com.wolfhouse.dbsync.enums.SyncModeEnum;
+import com.wolfhouse.dbsync.enums.MigrateModeEnum;
 import com.wolfhouse.dbsync.enums.TransactionGranularityEnum;
 import lombok.Data;
 import org.jspecify.annotations.NonNull;
@@ -16,10 +16,10 @@ import java.util.Map;
  *
  * @author Rylin Wolf
  */
-@ConfigurationProperties(prefix = "sync")
+@ConfigurationProperties(prefix = "mig")
 @Configuration
 @Data
-public class SyncProperty {
+public class MigrateProperty {
     /** 事务配置 */
     private Transaction transaction;
     /** 分页配置 */
@@ -76,7 +76,7 @@ public class SyncProperty {
      * @param sourceType 源数据库类型
      * @param descType   目标数据库类型
      */
-    public record Core(SyncModeEnum mode,
+    public record Core(MigrateModeEnum mode,
                        TableMode table,
                        DbTypeEnum sourceType,
                        DbTypeEnum descType) {}

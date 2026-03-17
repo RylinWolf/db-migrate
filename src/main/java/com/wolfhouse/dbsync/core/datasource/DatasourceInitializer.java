@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wolfhouse.dbsync.core.DatasourceContext;
 import com.wolfhouse.dbsync.core.datasource.strategy.DataSourceStrategy;
 import com.wolfhouse.dbsync.enums.DbTypeEnum;
-import com.wolfhouse.dbsync.enums.SyncModeEnum;
+import com.wolfhouse.dbsync.enums.MigrateModeEnum;
 import com.wolfhouse.dbsync.properties.BaseDbProperty;
-import com.wolfhouse.dbsync.properties.SyncProperty;
+import com.wolfhouse.dbsync.properties.MigrateProperty;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @Accessors(fluent = true)
 public class DatasourceInitializer {
     /** 同步器配置 */
-    private final SyncProperty      syncProperty;
+    private final MigrateProperty   migrateProperty;
     /** 对象转换器 */
     private final ObjectMapper      objectMapper;
     /** 数据源上下文 */
@@ -57,10 +57,10 @@ public class DatasourceInitializer {
         // 1. 加载配置
         loadConfig();
         // 2. 加载源数据源
-        context.sourceStrategy(initAndGetDatasource(syncProperty.getDb().source(), syncProperty.getCore().sourceType()));
+        context.sourceStrategy(initAndGetDatasource(migrateProperty.getDb().source(), migrateProperty.getCore().sourceType()));
         log.debug("源数据源已加载: {}", context.sourceStrategy());
         // 3. 加载目标数据源
-        context.destStrategy(initAndGetDatasource(syncProperty.getDb().dest(), syncProperty.getCore().descType()));
+        context.destStrategy(initAndGetDatasource(migrateProperty.getDb().dest(), migrateProperty.getCore().descType()));
         log.debug("目标数据源已加载: {}", context.destStrategy());
         // 4. 检查兼容性
         if (!context.sourceStrategy().strategySupport(context.destStrategy())) {
@@ -70,13 +70,13 @@ public class DatasourceInitializer {
 
     /** 加载事务、分页、核心配置 */
     private void loadConfig() {
-        context.transaction(syncProperty.getTransaction());
+        context.transaction(migrateProperty.getTransaction());
         log.debug("加载事务配置: {}", context.transaction());
-        context.pagination(syncProperty.getPagination());
+        context.pagination(migrateProperty.getPagination());
         log.debug("加载分页配置: {}", context.pagination());
-        context.core(syncProperty.getCore());
+        context.core(migrateProperty.getCore());
         log.debug("加载核心配置: {}", context.core());
-        context.field(syncProperty.getField());
+        context.field(migrateProperty.getField());
         log.debug("加载字段配置: {}", context.field());
     }
 
@@ -97,7 +97,7 @@ public class DatasourceInitializer {
             log.debug("初始化数据源: {}", property);
             strategy.initDatasource(property);
             // 配置忽略字段
-            SyncProperty.Field field = context.field();
+            MigrateProperty.Field field = context.field();
             if (field.ignore() != null) {
                 strategy.setIgnore(Arrays.asList(field.ignore()));
             }
@@ -109,9 +109,9 @@ public class DatasourceInitializer {
 
     private void loadDestTables() {
         // 1. 获取导入模式
-        SyncProperty.Core core   = syncProperty.getCore();
-        SyncModeEnum      mode   = core.mode();
-        Set<String>       tables = new HashSet<>();
+        MigrateProperty.Core core   = migrateProperty.getCore();
+        MigrateModeEnum      mode   = core.mode();
+        Set<String>          tables = new HashSet<>();
         switch (mode) {
             case DB -> {
                 // 按库导入，则获取该库下的所有表
@@ -119,7 +119,7 @@ public class DatasourceInitializer {
             }
             case TABLE -> {
                 // 按表导入，添加配置的所有表
-                SyncProperty.TableMode table = core.table();
+                MigrateProperty.TableMode table = core.table();
                 if (table == null) {
                     throw new IllegalArgumentException("[sync:core:table] 未配置要导入的表!");
                 }

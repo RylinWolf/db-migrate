@@ -1,6 +1,6 @@
 package com.wolfhouse.dbsync;
 
-import com.wolfhouse.dbsync.core.SyncExecutor;
+import com.wolfhouse.dbsync.core.MigrateExecutor;
 import com.wolfhouse.dbsync.core.datasource.strategy.DataSourceStrategy;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,10 +13,10 @@ import java.util.Collection;
  * @author Rylin Wolf
  */
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
-public class DbSyncApplication {
+public class DbMigApplication {
     public static void main(String[] args) throws Exception {
-        ConfigurableApplicationContext context  = SpringApplication.run(DbSyncApplication.class, args);
-        SyncExecutor                   executor = context.getBean(SyncExecutor.class);
+        ConfigurableApplicationContext context  = SpringApplication.run(DbMigApplication.class, args);
+        MigrateExecutor                executor = context.getBean(MigrateExecutor.class);
         DataSourceStrategy<?>          source   = executor.getContext().sourceStrategy();
         DataSourceStrategy<?>          dest     = executor.getContext().destStrategy();
 
