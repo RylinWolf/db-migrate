@@ -2,16 +2,15 @@ package com.wolfhouse.dbsync.core.datasource.strategy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.influxdb.v3.client.InfluxDBClient;
+import com.mybatisflex.core.query.QueryWrapper;
 import com.wolfhouse.dbsync.properties.BaseDbProperty;
 import com.wolfhouse.dbsync.properties.InfluxProperty;
 import com.wolfhouse.influxclient.client.InfluxClient;
 import com.wolfhouse.influxclient.core.InfluxQueryWrapper;
+import com.wolfhouse.influxclient.pojo.*;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * InfluxDB 数据源
@@ -45,17 +44,34 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
 
     @Override
     public boolean insertBatch(String tableName, Collection<Map<String, Object>> data) {
-        return false;
+        try {
+            // 遍历 map，构造 Influx 操作对象
+            List<AbstractActionInfluxObj> objs = new ArrayList<>();
+            data.forEach(m -> objs.add(new AbstractActionInfluxObj() {{
+                // 设置字段
+                addFields(InfluxFields.of(m));
+                // 初始化标签
+                this.tags = InfluxTags.instance();
+                // 设置表名
+                setMeasurement(tableName);
+            }}));
+            client.insertBatch(objs, objs.size());
+            return true;
+        } catch (Exception e) {
+            log.error("插入数据失败", e);
+            return false;
+        }
     }
 
     @Override
     public List<Map<String, Object>> queryBatch(String tableName, int pageSize, int pageNum) {
-        return List.of();
+        InfluxPage<InfluxResult> res = client.pagination(InfluxQueryWrapper.create(tableName), InfluxResult.class, pageNum, pageSize);
+        return res.records().stream().map(InfluxResult::toMap).flatMap(List::stream).toList();
     }
 
     @Override
     public PageIterator<Map<String, Object>> page(String tableName, Integer pageSize) {
-        return null;
+        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create(), objectMapper, tableName);
     }
 
     @Override
@@ -75,7 +91,7 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
 
     @Override
     public Set<String> columnNames(String tableName) {
-        return Set.of();
+        return Set.copyOf(client.tableColumns(tableName));
     }
 
     @Override
@@ -90,16 +106,16 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
 
     @Override
     public TableInfo getTableInfo(String tableName) {
-        return null;
+        return new TableInfo(tableName, count(tableName), columnNames(tableName).toArray(String[]::new));
     }
 
     @Override
     public boolean hasTable(String tableName) {
-        return false;
+        return client.tableNames().contains(tableName);
     }
 
     @Override
     public void createSchema(String name, Collection<String> cols) {
-
+        throw new UnsupportedOperationException("Influx 数据源不支持创建表架构");
     }
 }
