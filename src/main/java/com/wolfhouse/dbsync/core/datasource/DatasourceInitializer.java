@@ -71,8 +71,11 @@ public class DatasourceInitializer {
     /** 加载事务、分页、核心配置 */
     private void loadConfig() {
         context.transaction(syncProperty.getTransaction());
+        log.debug("加载事务配置: {}", context.transaction());
         context.pagination(syncProperty.getPagination());
+        log.debug("加载分页配置: {}", context.pagination());
         context.core(syncProperty.getCore());
+        log.debug("加载核心配置: {}", context.core());
     }
 
     /**
@@ -118,11 +121,11 @@ public class DatasourceInitializer {
             default -> throw new IllegalArgumentException("不支持的导入模式: " + mode);
         }
         // 2. 封装表信息对象
-        context.destTableMap(tables.stream()
-                                   .map(name -> context.sourceStrategy().getTableInfo(name))
-                                   .filter(Objects::nonNull)
-                                   .collect(Collectors.toMap(DataSourceStrategy.TableInfo::name,
-                                                             Function.identity())));
-        log.debug("表信息对象加载完毕: {}", context.destTableMap().keySet());
+        context.targetTableMap(tables.stream()
+                                     .map(name -> context.sourceStrategy().getTableInfo(name))
+                                     .filter(Objects::nonNull)
+                                     .collect(Collectors.toMap(DataSourceStrategy.TableInfo::name,
+                                                               Function.identity())));
+        log.debug("表信息对象加载完毕: {}", context.targetTableMap().keySet());
     }
 }

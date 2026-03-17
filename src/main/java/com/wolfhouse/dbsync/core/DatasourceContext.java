@@ -22,7 +22,7 @@ public class DatasourceContext {
     /** 目标数据源 */
     private DataSourceStrategy<?>                     destStrategy;
     /** 目标表映射 */
-    private Map<String, DataSourceStrategy.TableInfo> destTableMap;
+    private Map<String, DataSourceStrategy.TableInfo> targetTableMap;
     /** 事务配置 */
     private SyncProperty.Transaction                  transaction;
     /** 分页配置 */

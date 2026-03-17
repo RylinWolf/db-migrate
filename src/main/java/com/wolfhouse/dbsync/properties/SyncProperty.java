@@ -68,15 +68,11 @@ public class SyncProperty {
      * 核心配置
      *
      * @param mode       同步模式
-     * @param db         数据库模式配置
      * @param table      表模式配置
      * @param sourceType 源数据库类型
      * @param descType   目标数据库类型
      */
-    public record Core(SyncModeEnum mode, DbMode db, TableMode table, DbTypeEnum sourceType, DbTypeEnum descType) {}
-
-    public record DbMode(String name) {
-    }
+    public record Core(SyncModeEnum mode, TableMode table, DbTypeEnum sourceType, DbTypeEnum descType) {}
 
     public record TableMode(String... tables) {
     }

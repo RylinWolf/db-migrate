@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 import java.util.Iterator;
 import java.util.List;
@@ -13,12 +15,16 @@ import java.util.List;
  *
  * @author Rylin Wolf
  */
+@Accessors(fluent = true)
 public class PageIterator<T> implements Iterator<List<T>> {
+    @Getter
     private final int          pageSize;
+    @Getter
     private final long         total;
     private final QueryWrapper wrapper;
     private final ObjectMapper objectMapper;
     private final String       tableName;
+    @Getter
     private       int          pageNum = 1;
 
     private PageIterator(int pageSize, long total, QueryWrapper queryWrapper, ObjectMapper objectMapper, String tableName) {

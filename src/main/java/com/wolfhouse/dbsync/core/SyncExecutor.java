@@ -28,18 +28,20 @@ public class SyncExecutor {
 
     /** 执行同步 */
     public void doSynchronize() {
+        log.info("开始数据同步");
         DataSourceStrategy<?>   source   = context.sourceStrategy();
         DataSourceStrategy<?>   dest     = context.destStrategy();
         SyncProperty.Pagination pageConf = context.pagination();
 
         // 遍历表信息映射，事务级别 任务
         wrapTransaction(TransactionGranularityEnum.TASK, () -> context
-                .destTableMap()
+                .targetTableMap()
                 .values()
                 // 事务级别 表
                 .forEach(table -> wrapTransaction(
                         TransactionGranularityEnum.TABLE,
                         () -> syncTable(table, dest, pageConf, source))));
+        log.info("数据同步结束");
     }
 
     /**
@@ -51,21 +53,30 @@ public class SyncExecutor {
      * @param source   源数据源策略，用于执行读取操作。
      */
     private void syncTable(DataSourceStrategy.TableInfo table, DataSourceStrategy<?> dest, SyncProperty.Pagination pageConf, DataSourceStrategy<?> source) {
+        String tableName = table.name();
         // 表记录不存在，仅构建架构
         if (table.count() <= 0) {
-            dest.createSchema(table.name(), Arrays.asList(table.cols()));
+            log.debug("表记录不存在，仅构建架构");
+            try {
+                dest.createSchema(tableName, Arrays.asList(table.cols()));
+            } catch (Exception e) {
+                log.error("架构构建失败", e);
+            }
             return;
         }
         // 1. 若启用分页，则分页查询
         if (pageConf.enable() && pageConf.critical() >= table.count() && pageConf.size() > 0) {
-            PageIterator<?> page = source.page(table.name(), pageConf.size());
+            log.debug("分页已启用: {}", pageConf);
+            PageIterator<?> page = source.page(tableName, pageConf.size());
             while (page.hasNext()) {
-                syncBatch(dest, table.name(), page.next());
+                log.debug("表 {} 分页同步数据, size: {}, num: {}, total: {}", tableName, page.pageSize(), page.pageNum(), page.total());
+                syncBatch(dest, tableName, page.next());
             }
             return;
         }
         // 2. 未启用分页，全量查询
-        syncBatch(dest, table.name(), source.queryAll(table.name()));
+        log.debug("分页未启用，表 {} 全量同步数据", tableName);
+        syncBatch(dest, tableName, source.queryAll(tableName));
     }
 
     /**
