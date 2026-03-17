@@ -115,6 +115,13 @@ public interface DataSourceStrategy<R> {
     boolean hasTable(String tableName);
 
     /**
+     * 配置忽略字段: 在插入、获取数据时忽略这些字段
+     *
+     * @param ignore 忽略字段
+     */
+    void setIgnore(Collection<String> ignore);
+
+    /**
      * 表信息封装
      *
      * @param name  表名

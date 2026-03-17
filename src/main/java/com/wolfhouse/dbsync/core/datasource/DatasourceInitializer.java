@@ -54,18 +54,18 @@ public class DatasourceInitializer {
      * 加载数据源
      */
     private void loadSource() {
-        // 1. 加载源数据源
+        // 1. 加载配置
+        loadConfig();
+        // 2. 加载源数据源
         context.sourceStrategy(initAndGetDatasource(syncProperty.getDb().source(), syncProperty.getCore().sourceType()));
         log.debug("源数据源已加载: {}", context.sourceStrategy());
-        // 2. 加载目标数据源
+        // 3. 加载目标数据源
         context.destStrategy(initAndGetDatasource(syncProperty.getDb().dest(), syncProperty.getCore().descType()));
         log.debug("目标数据源已加载: {}", context.destStrategy());
-        // 3. 检查兼容性
+        // 4. 检查兼容性
         if (!context.sourceStrategy().strategySupport(context.destStrategy())) {
             throw new UnsupportedOperationException("不兼容的数据源策略! source: %s, dest: %s".formatted(context.sourceStrategy(), context.destStrategy()));
         }
-        // 4. 加载配置
-        loadConfig();
     }
 
     /** 加载事务、分页、核心配置 */
@@ -76,6 +76,8 @@ public class DatasourceInitializer {
         log.debug("加载分页配置: {}", context.pagination());
         context.core(syncProperty.getCore());
         log.debug("加载核心配置: {}", context.core());
+        context.field(syncProperty.getField());
+        log.debug("加载字段配置: {}", context.field());
     }
 
     /**
@@ -94,6 +96,11 @@ public class DatasourceInitializer {
             // 初始化数据源
             log.debug("初始化数据源: {}", property);
             strategy.initDatasource(property);
+            // 配置忽略字段
+            SyncProperty.Field field = context.field();
+            if (field.ignore() != null) {
+                strategy.setIgnore(Arrays.asList(field.ignore()));
+            }
             return strategy;
         } catch (Exception e) {
             throw new RuntimeException(e);

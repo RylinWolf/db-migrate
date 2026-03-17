@@ -9,6 +9,7 @@ import lombok.experimental.Accessors;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 分页迭代器
@@ -25,7 +26,7 @@ public class PageIterator<T> implements Iterator<List<T>> {
     private final ObjectMapper objectMapper;
     private final String       tableName;
     @Getter
-    private       int          pageNum = 1;
+    private final AtomicLong   pageNum = new AtomicLong(0);
 
     private PageIterator(int pageSize, long total, QueryWrapper queryWrapper, ObjectMapper objectMapper, String tableName) {
         this.pageSize     = pageSize;
@@ -39,18 +40,22 @@ public class PageIterator<T> implements Iterator<List<T>> {
         return new PageIterator<>(pageSize, total, queryWrapper, objectMapper, tableName);
     }
 
+    private boolean hasNext(long num) {
+        return (num - 1) * pageSize < total;
+    }
+
     @Override
     public boolean hasNext() {
-        return (long) (pageNum - 1) * pageSize < total;
+        return hasNext(pageNum.get());
     }
 
     @Override
     public List<T> next() {
-        try {
-            return objectMapper.convertValue(Db.paginate(tableName, pageNum, pageSize, wrapper).getRecords(), new TypeReference<>() {});
-        } finally {
-            pageNum++;
+        long num = pageNum.incrementAndGet();
+        if (!hasNext(num)) {
+            return List.of();
         }
+        return objectMapper.convertValue(Db.paginate(tableName, num, pageSize, wrapper).getRecords(), new TypeReference<>() {});
     }
 
     @Override

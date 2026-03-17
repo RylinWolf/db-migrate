@@ -8,15 +8,14 @@ import com.mybatisflex.core.row.Row;
 import com.wolfhouse.dbsync.properties.BaseDbProperty;
 import com.wolfhouse.dbsync.properties.MySqlProperty;
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.logging.slf4j.Slf4jImpl;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * MySQL 数据源
@@ -24,11 +23,15 @@ import java.util.Set;
  * @author Rylin Wolf
  */
 @Slf4j
+@Accessors(fluent = true)
 public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
     private final ObjectMapper objectMapper;
+    @Getter
+    private final Set<String>  ignore;
 
     public MySqlSource(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+        ignore            = new HashSet<>();
     }
 
     @Override
@@ -53,6 +56,8 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
         try {
             List<Row> rowList = data.stream().map(m -> {
                 Row row = new Row();
+                // 排除忽略字段
+                ignore.forEach(m::remove);
                 row.putAll(m);
                 return row;
             }).toList();
@@ -69,7 +74,12 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
         return Db.paginate(tableName, pageNum, pageSize, QueryWrapper.create())
                  .getRecords()
                  .stream()
-                 .map(Row::toCamelKeysMap)
+                 .map(r -> {
+                     // 排除忽略字段
+                     Map<String, Object> map = r.toCamelKeysMap();
+                     ignore.forEach(map::remove);
+                     return map;
+                 })
                  .toList();
     }
 
@@ -137,8 +147,18 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
     public Collection<Map<String, Object>> queryAll(String tableName) {
         return Db.selectAll(tableName)
                  .stream()
-                 .map(Row::toCamelKeysMap)
+                 .map(r -> {
+                     // 移除排除字段
+                     Map<String, Object> map = r.toCamelKeysMap();
+                     ignore.forEach(map::remove);
+                     return map;
+                 })
                  .toList();
+    }
+
+    @Override
+    public void setIgnore(Collection<String> ignore) {
+        this.ignore.addAll(ignore);
     }
 
     private String buildTable(String tableName, Collection<String> cols) {

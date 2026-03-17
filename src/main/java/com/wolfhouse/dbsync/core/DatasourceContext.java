@@ -29,6 +29,8 @@ public class DatasourceContext {
     private SyncProperty.Pagination                   pagination;
     /** 核心配置 */
     private SyncProperty.Core                         core;
+    /** 字段配置 */
+    private SyncProperty.Field                        field;
     /** 上下文就绪状态 */
     private boolean                                   ready;
 }
