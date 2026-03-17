@@ -8,6 +8,7 @@ import com.mybatisflex.core.row.Row;
 import com.wolfhouse.dbsync.properties.BaseDbProperty;
 import com.wolfhouse.dbsync.properties.MySqlProperty;
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.logging.slf4j.Slf4jImpl;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -22,6 +23,7 @@ import java.util.Set;
  *
  * @author Rylin Wolf
  */
+@Slf4j
 public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
     private final ObjectMapper objectMapper;
 
@@ -48,7 +50,18 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
 
     @Override
     public boolean insertBatch(String tableName, Collection<Map<String, Object>> data) {
-        return false;
+        try {
+            List<Row> rowList = data.stream().map(m -> {
+                Row row = new Row();
+                row.putAll(m);
+                return row;
+            }).toList();
+            Db.insertBatch(tableName, rowList);
+            return true;
+        } catch (Exception e) {
+            log.error("批量添加数据失败！", e);
+            return false;
+        }
     }
 
     @Override
