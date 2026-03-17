@@ -1,5 +1,6 @@
 package com.wolfhouse.dbsync.core.datasource.strategy;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.MybatisFlexBootstrap;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
@@ -22,9 +23,11 @@ import java.util.Set;
  * @author Rylin Wolf
  */
 public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
-    /** 支持的数据源策略 */
-    private static final Set<Class<? extends DataSourceStrategy<?>>> SUPPORTED_STRATEGIES = Set.of(MySqlSource.class,
-                                                                                                   InfluxSource.class);
+    private final ObjectMapper objectMapper;
+
+    public MySqlSource(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public void initDatasource(BaseDbProperty prop) {
@@ -59,7 +62,7 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
 
     @Override
     public PageIterator<Map<String, Object>> page(String tableName, Integer pageSize) {
-        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create(), tableName);
+        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create(), objectMapper, tableName);
     }
 
     @Override
@@ -96,7 +99,7 @@ public class MySqlSource implements DataSourceStrategy<Map<String, Object>> {
 
     @Override
     public boolean strategySupport(DataSourceStrategy<?> strategy) {
-        return SUPPORTED_STRATEGIES.contains(strategy.getClass());
+        return StrategySupports.MYSQL.contains(strategy.getClass());
     }
 
     @Override

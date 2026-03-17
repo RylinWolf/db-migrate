@@ -1,5 +1,6 @@
 package com.wolfhouse.dbsync.core.datasource.strategy;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.influxdb.v3.client.InfluxDBClient;
 import com.wolfhouse.dbsync.properties.BaseDbProperty;
 import com.wolfhouse.dbsync.properties.InfluxProperty;
@@ -19,11 +20,13 @@ import java.util.Set;
  */
 @Slf4j
 public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
-    /** 支持的数据源策略 */
-    private static final Set<Class<? extends DataSourceStrategy<?>>> SUPPORTED_STRATEGIES = Set.of(InfluxSource.class,
-                                                                                                   MySqlSource.class);
+    private final ObjectMapper objectMapper;
     /** Influx 客户端 */
-    private              InfluxClient                                client;
+    private       InfluxClient client;
+
+    public InfluxSource(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public void initDatasource(BaseDbProperty prop) {
@@ -82,7 +85,7 @@ public class InfluxSource implements DataSourceStrategy<Map<String, Object>> {
 
     @Override
     public boolean strategySupport(DataSourceStrategy<?> strategy) {
-        return SUPPORTED_STRATEGIES.contains(strategy.getClass());
+        return StrategySupports.INFLUX.contains(strategy.getClass());
     }
 
     @Override

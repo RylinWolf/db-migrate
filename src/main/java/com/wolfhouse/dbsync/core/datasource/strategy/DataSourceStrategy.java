@@ -13,12 +13,12 @@ import java.util.Set;
  *
  * @author Rylin Wolf
  */
+@SuppressWarnings({"BooleanMethodIsAlwaysInverted"})
 public interface DataSourceStrategy<R> {
     /**
      * 初始化数据源
      *
      * @param prop 数据源连接信息
-     * @return 是否初始化成功
      */
     void initDatasource(BaseDbProperty prop);
 
@@ -110,7 +110,7 @@ public interface DataSourceStrategy<R> {
      * 查询是否有指定表
      *
      * @param tableName 表名
-     *
+     * @return 是否存在
      */
     boolean hasTable(String tableName);
 
