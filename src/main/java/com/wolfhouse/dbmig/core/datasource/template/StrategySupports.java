@@ -9,9 +9,9 @@ import java.util.Set;
  */
 public final class StrategySupports {
     /** MySQL 数据源支持的源 */
-    public static final Set<Class<? extends BaseDataSourceTemplate<?>>> MYSQL = Set.of(MySqlSource.class,
-                                                                                       InfluxSource.class);
-
+    public static final Set<Class<? extends BaseDataSourceTemplate<?>>> MYSQL  = Set.of(MySqlSource.class,
+                                                                                        InfluxSource.class);
+    /** Influx 数据源支持的源 */
     public static final Set<Class<? extends BaseDataSourceTemplate<?>>> INFLUX = Set.of(InfluxSource.class,
                                                                                         MySqlSource.class);
 

@@ -1,6 +1,5 @@
 package com.wolfhouse.dbmig.core.datasource.template;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
@@ -42,10 +41,6 @@ public class PageIterator<T extends BaseSourceData> implements Iterator<List<T>>
      */
     private final QueryWrapper wrapper;
     /**
-     * JSON 对象映射器，用于数据类型转换
-     */
-    private final ObjectMapper objectMapper;
-    /**
      * 表名
      */
     private final String       tableName;
@@ -63,22 +58,19 @@ public class PageIterator<T extends BaseSourceData> implements Iterator<List<T>>
      * @param pageSize     每页数据量
      * @param total        数据总数
      * @param queryWrapper 查询条件包装器
-     * @param objectMapper JSON 对象映射器
      * @param tableName    表名
      * @param dataMapper   数据映射器，用于将数据库行映射为目标数据类型
      */
     private PageIterator(int pageSize,
                          long total,
                          QueryWrapper queryWrapper,
-                         ObjectMapper objectMapper,
                          String tableName,
                          Function<Map<String, Object>, T> dataMapper) {
-        this.pageSize     = pageSize;
-        this.total        = total;
-        this.wrapper      = queryWrapper;
-        this.objectMapper = objectMapper;
-        this.tableName    = tableName;
-        this.dataMapper   = dataMapper;
+        this.pageSize   = pageSize;
+        this.total      = total;
+        this.wrapper    = queryWrapper;
+        this.tableName  = tableName;
+        this.dataMapper = dataMapper;
     }
 
     /**
@@ -88,12 +80,11 @@ public class PageIterator<T extends BaseSourceData> implements Iterator<List<T>>
      * @param pageSize     每页数据量
      * @param total        数据总数
      * @param queryWrapper 查询条件包装器
-     * @param objectMapper JSON 对象映射器
      * @param tableName    表名
      * @return 分页迭代器实例
      */
-    public static <T extends BaseSourceData> PageIterator<T> of(int pageSize, long total, QueryWrapper queryWrapper, ObjectMapper objectMapper, String tableName, Function<Map<String, Object>, T> dataMapper) {
-        return new PageIterator<>(pageSize, total, queryWrapper, objectMapper, tableName, dataMapper);
+    public static <T extends BaseSourceData> PageIterator<T> of(int pageSize, long total, QueryWrapper queryWrapper, String tableName, Function<Map<String, Object>, T> dataMapper) {
+        return new PageIterator<>(pageSize, total, queryWrapper, tableName, dataMapper);
     }
 
     /**
@@ -132,9 +123,9 @@ public class PageIterator<T extends BaseSourceData> implements Iterator<List<T>>
             return List.of();
         }
         List<T> result = new ArrayList<>();
-        Db.paginate(tableName, num, pageSize, wrapper).getRecords().forEach(r -> {
-            result.add(dataMapper.apply(r.toCamelKeysMap()));
-        });
+        Db.paginate(tableName, num, pageSize, wrapper)
+          .getRecords()
+          .forEach(r -> result.add(dataMapper.apply(r.toCamelKeysMap())));
         return result;
     }
 

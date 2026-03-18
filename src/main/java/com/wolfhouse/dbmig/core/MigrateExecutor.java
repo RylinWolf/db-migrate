@@ -48,6 +48,7 @@ public class MigrateExecutor {
     void init() {
         this.rejectedTasks = new ArrayList<>();
         this.taskExecutor  = new ThreadPoolTaskExecutor();
+        // 配置线程池：任务是 IO 密集型，所以线程池数量可以略高一些
         taskExecutor.setMaxPoolSize(64);
         taskExecutor.setCorePoolSize(24);
         taskExecutor.setQueueCapacity(1000);

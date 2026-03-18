@@ -82,7 +82,7 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
 
     @Override
     public PageIterator<InfluxData> page(String tableName, Integer pageSize) {
-        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create(), objectMapper, tableName, InfluxData::of);
+        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create(), tableName, InfluxData::of);
     }
 
     @Override

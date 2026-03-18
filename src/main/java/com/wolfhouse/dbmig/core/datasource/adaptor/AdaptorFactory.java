@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 数据源适配器工厂
@@ -20,7 +21,7 @@ public final class AdaptorFactory {
     private static final Map<Class<? extends BaseSourceData>, BaseDataAdaptor<? extends BaseSourceData>> ADAPTOR_MAP;
 
     /** 是否初始化完成 */
-    private static boolean initialized;
+    private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
 
     static {
         ADAPTOR_MAP = new ConcurrentHashMap<>();
@@ -31,7 +32,7 @@ public final class AdaptorFactory {
      *
      */
     public static void init(MigrateProperty.Field fieldConf) {
-        if (initialized) {
+        if (!INITIALIZED.compareAndSet(false, true)) {
             return;
         }
         ServiceLoader<BaseDataAdaptor> loader = ServiceLoader.load(BaseDataAdaptor.class);
@@ -40,11 +41,17 @@ public final class AdaptorFactory {
             adaptor.config(fieldConf);
             ADAPTOR_MAP.put(adaptor.getDataClazz(), adaptor);
         }
-        initialized = true;
     }
 
+    /**
+     * 根据指定的类型，获取该类的适配器
+     *
+     * @param clazz 指定类型
+     * @param <T>   数据类型
+     * @return 该类适配器
+     */
     public static <T extends BaseSourceData> BaseDataAdaptor<T> getAdaptor(Class<T> clazz) {
-        if (!initialized) {
+        if (!INITIALIZED.get()) {
             throw new IllegalStateException("适配器工厂未初始化!");
         }
         if (!ADAPTOR_MAP.containsKey(clazz)) {

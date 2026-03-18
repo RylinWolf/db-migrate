@@ -85,7 +85,7 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
 
     @Override
     public PageIterator<MySqlData> page(String tableName, Integer pageSize) {
-        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create(), objectMapper, tableName, MySqlData::of);
+        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create(), tableName, MySqlData::of);
     }
 
     @Override
