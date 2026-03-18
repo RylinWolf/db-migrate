@@ -41,42 +41,78 @@ public class DatasourceInitializer {
 
 
     @EventListener(value = ContextRefreshedEvent.class)
+    void initOnStart() {
+        if (!migrateProperty.isOnStart()) {
+            // 未启用启动时加载
+            return;
+        }
+        init();
+    }
+
+    /**
+     * 初始化配置，加载数据源、目标表等信息
+     */
     public void init() {
-        // 1. 加载数据源
-        loadSource();
-        // 2. 根据配置参数，获取目标数据表信息
-        loadDestTables();
-        // 3. 数据就绪
+        initUsing(migrateProperty);
+    }
+
+    /**
+     * 使用指定配置初始化
+     *
+     * @param prop 迁移配置
+     */
+    public void initUsing(MigrateProperty prop) {
+        // 0. 校验配置
+        propValid(prop);
+        // 1. 加载配置
+        loadConfig(prop);
+        // 2. 加载数据源
+        loadSource(prop);
+        // 3. 根据配置参数，获取目标数据表信息
+        loadDestTables(prop);
+        // 4. 数据就绪
         context.ready(true);
+    }
+
+    /**
+     * 验证配置项
+     *
+     * @param prop 要验证的配置项
+     */
+    private void propValid(MigrateProperty prop) {
+        if (prop.getCore() == null) {
+            throw new NullPointerException("缺少核心配置: core");
+        }
+        if (prop.getDb() == null) {
+            throw new NullPointerException("缺少数据库配置: db");
+        }
     }
 
     /**
      * 加载数据源
      */
-    private void loadSource() {
-        // 1. 加载配置
-        loadConfig();
-        // 2. 加载源数据源
-        context.sourceStrategy(initAndGetDatasource(migrateProperty.getDb().source(), migrateProperty.getCore().sourceType()));
+    private void loadSource(MigrateProperty prop) {
+        // 1. 加载源数据源
+        context.sourceStrategy(initAndGetDatasource(prop.getDb().source(), prop.getCore().sourceType()));
         log.debug("源数据源已加载: {}", context.sourceStrategy());
-        // 3. 加载目标数据源
-        context.destStrategy(initAndGetDatasource(migrateProperty.getDb().dest(), migrateProperty.getCore().descType()));
+        // 2. 加载目标数据源
+        context.destStrategy(initAndGetDatasource(prop.getDb().dest(), prop.getCore().destType()));
         log.debug("目标数据源已加载: {}", context.destStrategy());
-        // 4. 检查兼容性
+        // 3. 检查兼容性
         if (!context.sourceStrategy().strategySupport(context.destStrategy())) {
             throw new UnsupportedOperationException("不兼容的数据源策略! source: %s, dest: %s".formatted(context.sourceStrategy(), context.destStrategy()));
         }
     }
 
     /** 加载事务、分页、核心配置 */
-    private void loadConfig() {
-        context.transaction(migrateProperty.getTransaction());
+    private void loadConfig(MigrateProperty prop) {
+        context.transaction(prop.getTransaction());
         log.debug("加载事务配置: {}", context.transaction());
-        context.pagination(migrateProperty.getPagination());
+        context.pagination(prop.getPagination());
         log.debug("加载分页配置: {}", context.pagination());
-        context.core(migrateProperty.getCore());
+        context.core(prop.getCore());
         log.debug("加载核心配置: {}", context.core());
-        context.field(migrateProperty.getField());
+        context.field(prop.getField());
         log.debug("加载字段配置: {}", context.field());
     }
 
@@ -101,15 +137,17 @@ public class DatasourceInitializer {
             if (field.ignore() != null) {
                 strategy.setIgnore(Arrays.asList(field.ignore()));
             }
+            // 配置忽略空字段
+            strategy.setIgnoreNull(field.ignoreNull());
             return strategy;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void loadDestTables() {
+    private void loadDestTables(MigrateProperty prop) {
         // 1. 获取导入模式
-        MigrateProperty.Core core   = migrateProperty.getCore();
+        MigrateProperty.Core core   = prop.getCore();
         MigrateModeEnum      mode   = core.mode();
         Set<String>          tables = new HashSet<>();
         switch (mode) {
@@ -120,8 +158,8 @@ public class DatasourceInitializer {
             case TABLE -> {
                 // 按表导入，添加配置的所有表
                 MigrateProperty.TableMode table = core.table();
-                if (table == null) {
-                    throw new IllegalArgumentException("[sync:core:table] 未配置要导入的表!");
+                if (table == null || table.tables() == null || table.tables().length == 0) {
+                    throw new IllegalArgumentException("按表导入模式: 未配置要导入的表!");
                 }
                 tables.addAll(Arrays.asList(table.tables()));
             }
@@ -133,6 +171,6 @@ public class DatasourceInitializer {
                                      .filter(Objects::nonNull)
                                      .collect(Collectors.toMap(BaseDataSourceTemplate.TableInfo::name,
                                                                Function.identity())));
-        log.debug("表信息对象加载完毕: {}", context.targetTableMap().keySet());
+        log.debug("表信息对象加载完毕, 共有 {} 个表: {}", context.targetTableMap().size(), context.targetTableMap().keySet());
     }
 }

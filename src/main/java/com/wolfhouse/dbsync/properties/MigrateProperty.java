@@ -4,6 +4,7 @@ import com.wolfhouse.dbsync.enums.DbTypeEnum;
 import com.wolfhouse.dbsync.enums.MigrateModeEnum;
 import com.wolfhouse.dbsync.enums.TransactionGranularityEnum;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +20,10 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "mig")
 @Configuration
 @Data
+@Slf4j
 public class MigrateProperty {
+    /** 启动时加载配置 */
+    private boolean     onStart;
     /** 事务配置 */
     private Transaction transaction;
     /** 分页配置 */
@@ -40,7 +44,12 @@ public class MigrateProperty {
     public record Transaction(boolean enable, TransactionGranularityEnum gran) {
         public Transaction(boolean enable, TransactionGranularityEnum gran) {
             this.enable = enable;
-            if (enable && gran == null) {
+            if (!enable) {
+                this.gran = null;
+                return;
+            }
+            if (gran == null) {
+                log.warn("未配置事务粒度，使用默认值: PAGE");
                 gran = TransactionGranularityEnum.PAGE;
             }
             this.gran = gran;
@@ -57,11 +66,19 @@ public class MigrateProperty {
     public record Pagination(boolean enable, Integer size, Integer critical) {
         public Pagination(boolean enable, Integer size, Integer critical) {
             this.enable = enable;
-            if (enable && size == null) {
+            if (!enable) {
+                // 未启用分页，初始化参数为 null
+                this.size     = null;
+                this.critical = null;
+                return;
+            }
+            if (size == null) {
+                log.warn("未配置分页大小，使用默认值: 200");
                 size = 200;
             }
-            if (enable && critical == null) {
-                critical = 300;
+            if (critical == null) {
+                log.warn("未配置启用分页触发阈值，使用默认值: 200");
+                critical = 200;
             }
             this.size     = size;
             this.critical = critical;
@@ -74,19 +91,37 @@ public class MigrateProperty {
      * @param mode       同步模式
      * @param table      表模式配置
      * @param sourceType 源数据库类型
-     * @param descType   目标数据库类型
+     * @param destType   目标数据库类型
      */
     public record Core(MigrateModeEnum mode,
                        TableMode table,
                        DbTypeEnum sourceType,
-                       DbTypeEnum descType) {}
+                       DbTypeEnum destType) {
+        public Core {
+            // 无数据源类型
+            if (sourceType == null || destType == null) {
+                throw new NullPointerException("缺少必须的配置：core.source-type、core.dest-type");
+            }
+            // 未设置模式，默认为 按库迁移
+            if (mode == null) {
+                log.warn("未设置迁移模式，使用默认值: DB");
+                mode = MigrateModeEnum.DB;
+            }
+            // 按表迁移，但未配置表信息
+            if (mode == MigrateModeEnum.TABLE) {
+                if (table == null || table.tables() == null || table.tables().length == 0) {
+                    throw new NullPointerException("缺少必须的配置：core.table");
+                }
+            }
+        }
+    }
 
     /**
      * 字段配置
      *
      * @param ignore 忽略字段
      */
-    public record Field(String[] ignore, Boolean ignoreNull) {
+    public record Field(String[] ignore, boolean ignoreNull) {
         @Override
         @NonNull
         public String toString() {
@@ -101,5 +136,10 @@ public class MigrateProperty {
     }
 
     public record Db(Map<String, Object> source, Map<String, Object> dest) {
+        public Db {
+            if (source == null || dest == null) {
+                throw new NullPointerException("缺少必须的配置：db.source、db.dest");
+            }
+        }
     }
 }

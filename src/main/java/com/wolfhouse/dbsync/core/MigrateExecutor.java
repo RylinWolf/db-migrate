@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -35,18 +34,18 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class MigrateExecutor {
     /** 数据源上下文 */
-    private final DatasourceContext            context;
-    private final DefaultTransactionDefinition defaultTransactionDefinition;
-    private final ObjectMapper                 objectMapper;
-    private       ThreadPoolTaskExecutor       taskExecutor;
-    private       List<Runnable>               failedTasks;
-    private       List<CompletableFuture<?>>   tasks = new ArrayList<>();
-
+    private final DatasourceContext          context;
+    private final ObjectMapper               objectMapper;
+    private       ThreadPoolTaskExecutor     taskExecutor;
+    /** 失败任务列表 */
+    private       List<Runnable>             rejectedTasks;
+    /** 正在进行的任务列表 */
+    private       List<CompletableFuture<?>> tasks = new ArrayList<>();
 
     @PostConstruct
-    public void init() {
-        this.failedTasks  = new ArrayList<>();
-        this.taskExecutor = new ThreadPoolTaskExecutor();
+    void init() {
+        this.rejectedTasks = new ArrayList<>();
+        this.taskExecutor  = new ThreadPoolTaskExecutor();
         taskExecutor.setMaxPoolSize(64);
         taskExecutor.setCorePoolSize(24);
         taskExecutor.setQueueCapacity(1000);
@@ -71,20 +70,25 @@ public class MigrateExecutor {
                 }
             }
             if (!done) {
-                failedTasks.add(r);
+                log.error("线程池繁忙，重试次数耗尽仍无法执行任务");
+                rejectedTasks.add(r);
             }
         });
         taskExecutor.initialize();
     }
 
     @PreDestroy
-    public void destroy() {
+    void destroy() {
         this.taskExecutor.shutdown();
         log.debug("线程池已关闭");
     }
 
     /** 执行同步 */
     public void doSynchronize() {
+        if (!context.ready()) {
+            log.error("数据同步失败：上下文未初始化或数据尚未准备完成！");
+            return;
+        }
         log.info("开始数据同步");
         BaseDataSourceTemplate<?>  source   = context.sourceStrategy();
         BaseDataSourceTemplate<?>  dest     = context.destStrategy();
@@ -99,7 +103,8 @@ public class MigrateExecutor {
                         TransactionGranularityEnum.TABLE,
                         () -> syncTable(table, dest, pageConf, source))));
         // 阻塞等待所有任务完成
-        CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new)).join();
+        CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new))
+                         .join();
         log.info("数据同步结束");
     }
 
@@ -136,19 +141,25 @@ public class MigrateExecutor {
                     return;
                 }
                 log.debug("表 {} 分页同步数据, size: {}, num: {}, total: {}", tableName, page.pageSize(), page.pageNum(), page.total());
-                tasks.add(CompletableFuture.runAsync(() -> syncBatch(dest, tableName, next), taskExecutor).exceptionally(t -> {
-                    log.error("分页同步数据失败，table: {}, size: {}, num: {}", tableName, page.pageSize(), page.pageNum(), t);
-                    return null;
-                }));
+                CompletableFuture<Void> task = CompletableFuture
+                        .runAsync(() -> syncBatch(dest, tableName, next), taskExecutor)
+                        .exceptionally(t -> {
+                            log.error("分页同步数据失败，table: {}, size: {}, num: {}", tableName, page.pageSize(), page.pageNum(), t);
+                            return null;
+                        });
+                tasks.add(task.whenComplete((v, t) -> tasks.remove(task)));
             }
             return;
         }
         // 2. 未启用分页，全量查询
         log.debug("分页未启用，表 {} 全量同步数据", tableName);
-        tasks.add(CompletableFuture.runAsync(() -> syncBatch(dest, tableName, source.queryAll(tableName)), taskExecutor).exceptionally(t -> {
-            log.error("全量同步数据失败，table: {},", tableName, t);
-            return null;
-        }));
+        CompletableFuture<Void> task = CompletableFuture
+                .runAsync(() -> syncBatch(dest, tableName, source.queryAll(tableName)), taskExecutor)
+                .exceptionally(t -> {
+                    log.error("全量同步数据失败，table: {},", tableName, t);
+                    return null;
+                });
+        tasks.add(task.whenComplete((v, t) -> tasks.remove(task)));
     }
 
     /**
