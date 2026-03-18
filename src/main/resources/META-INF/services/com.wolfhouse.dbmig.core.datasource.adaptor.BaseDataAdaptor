@@ -1,0 +1,2 @@
+com.wolfhouse.dbmig.core.datasource.adaptor.InfluxAdaptor
+com.wolfhouse.dbmig.core.datasource.adaptor.MySqlAdaptor

@@ -9,4 +9,4 @@ spring:
 
 logging:
   level:
-    com.wolfhouse.dbsync: debug
+    com.wolfhouse: debug
