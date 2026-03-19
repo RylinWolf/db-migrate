@@ -38,4 +38,4 @@ build/
 ### Mac OS ###
 .DS_Store
 
-src/main/resources/syncConf.yml
+src/main/resources/migConf.yml

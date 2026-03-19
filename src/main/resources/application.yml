@@ -5,7 +5,7 @@ spring:
     active: default
   config:
     import:
-      - optional:classpath:syncConf.yml
+      - optional:classpath:migConf.yml
 
 logging:
   level:
