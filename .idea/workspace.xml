@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AIAssistantCustomInstructionsStorage">
+    <option name="instructions">
+      <map>
+        <entry key="AIAssistant.General.ProjectPrompt">
+          <value>
+            <AIAssistantStoredInstruction>
+              <option name="actionId" value="AIAssistant.General.ProjectPrompt" />
+              <option name="content" value="中文回复。" />
+            </AIAssistantStoredInstruction>
+          </value>
+        </entry>
+        <entry key="AIAssistant.VCS.GenerateCommitMessage">
+          <value>
+            <AIAssistantStoredInstruction>
+              <option name="actionId" value="AIAssistant.VCS.GenerateCommitMessage" />
+              <option name="content" value="Avoid overly verbose descriptions or unnecessary details.用中文" />
+            </AIAssistantStoredInstruction>
+          </value>
+        </entry>
+        <entry key="AIAssistant.WriteDocumentation.Java">
+          <value>
+            <AIAssistantStoredInstruction>
+              <option name="actionId" value="AIAssistant.WriteDocumentation.Java" />
+              <option name="content" value="Do not return example code, do not use @author or @version or @since tags.&#10;DO NOT generate example usage.&#10;DO NOT generate usage example.&#10;DO NOT use html tags such as &lt;p&gt;, &lt;lu&gt;, &lt;li&gt;.&#10;DO NOT generate documentation for type member properties.&#10;Write javadoc.用中文" />
+            </AIAssistantStoredInstruction>
+          </value>
+        </entry>
+        <entry key="ij.vcs.review-buddy.summarize.short.github">
+          <value>
+            <AIAssistantStoredInstruction>
+              <option name="actionId" value="ij.vcs.review-buddy.summarize.short.github" />
+              <option name="content" value="Write the summary in the following format:&#10;&#10;## Summary&#10;... a short summary of the PR ...&#10;&#10;... a few bullet points explaining the main changes ...&#10;    用中文。" />
+            </AIAssistantStoredInstruction>
+          </value>
+        </entry>
+        <entry key="llm.testGeneration.java">
+          <value>
+            <AIAssistantStoredInstruction>
+              <option name="actionId" value="llm.testGeneration.java" />
+              <option name="content" value="用中文" />
+            </AIAssistantStoredInstruction>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="0f1d6f2f-ade6-4b39-b29b-0a60d5e13d53" name="更改" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CodeInsightWorkspaceSettings">
+    <option name="optimizeImportsOnTheFly" value="true" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="35" />
+    <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Enum" />
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="FormatOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;RylinWolf&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/RylinWolf/db-migrate.git&quot;,
+    &quot;accountId&quot;: &quot;8b88fd6a-7775-444b-898e-1386f4665b0e&quot;
+  }
+}</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$USER_HOME$/.sdkman/candidates/java/current/lib/src.zip!/java.base/java/time/temporal/Temporal.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.sdkman/candidates/java/current/lib/src.zip!/java.base/java/util/concurrent/CompletableFuture.java" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="customMavenHome" value="$PROJECT_DIR$/../../../Enviroment/maven/apache-maven-3.8.9" />
+        <option name="mavenHomeTypeForPersistence" value="CUSTOM" />
+        <option name="userSettingsFile" value="$PROJECT_DIR$/../../../Enviroment/maven/apache-maven-3.8.9/conf/settings.xml" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="OptimizeOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="3A6cQyYopXRTzdJvba8dh1cqBNZ" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.DbMigApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.DbSyncApplication.executor&quot;: &quot;Debug&quot;,
+    &quot;Spring Boot.MigrationApplication.executor&quot;: &quot;Run&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Volumes/Work/Personal/Project/db-migrate&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;项目&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.20177563&quot;,
+    &quot;rearrange.code.on.save&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;ml.llm.AcpAgentsConfigurable&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;
+    ]
+  }
+}</component>
+  <component name="RecapSpentCounter">
+    <option name="endsOfQuotaMs" value="1772420409168" />
+    <option name="spentUsd" value="0.14671075" />
+  </component>
+  <component name="RecapUselessUpdatesCounter">
+    <option name="suspendCountdown" value="0" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CreateClassDialog.RecentsKey">
+      <recent name="com.wolfhouse.myinfluxmigration.core.datasource" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/java/com/wolfhouse/dbsync/properties" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/resources" />
+      <recent name="$PROJECT_DIR$/src/main/java/com/wolfhouse/dbsync/properties" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="DbMigApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
+      <module name="dbmig" />
+      <option name="PROGRAM_PARAMETERS" value="-sd ckoms -st t_user" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.wolfhouse.dbmig.DbMigApplication" />
+      <option name="VM_PARAMETERS" value="--add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.wolfhouse.dbmig.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Spring Boot.DbMigApplication" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.32098.37" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.32098.37" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="0f1d6f2f-ade6-4b39-b29b-0a60d5e13d53" name="更改" comment="" />
+      <created>1771916448652</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1771916448652</updated>
+      <workItem from="1771916449687" duration="4915000" />
+      <workItem from="1771921400402" duration="23925000" />
+      <workItem from="1772173197923" duration="598000" />
+      <workItem from="1772177489455" duration="340000" />
+      <workItem from="1772177855126" duration="598000" />
+      <workItem from="1772414632073" duration="652000" />
+      <workItem from="1773625396613" duration="13909000" />
+      <workItem from="1773643343977" duration="43088000" />
+      <workItem from="1773796588946" duration="4064000" />
+      <workItem from="1773800688376" duration="3298000" />
+      <workItem from="1773804339011" duration="338000" />
+      <workItem from="1773804694315" duration="9533000" />
+      <workItem from="1773817015976" duration="11614000" />
+      <workItem from="1773828810825" duration="1058000" />
+      <workItem from="1773881325711" duration="9027000" />
+    </task>
+    <task id="LOCAL-00001" summary="init: 初始化提交，设计数据库同步器架构，实现配置加载与上下文初始化流程">
+      <option name="closed" value="true" />
+      <created>1773643181378</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1773643181378</updated>
+    </task>
+    <task id="LOCAL-00002" summary="feat: 重构与增强, 重命名核心执行器为 `SyncExecutor`；实现数据同步流程与事务支持；优化数据源策略接口；新增分页迭代器类；提升扩展性与兼容性">
+      <option name="closed" value="true" />
+      <created>1773650996637</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1773650996637</updated>
+    </task>
+    <task id="LOCAL-00003" summary="feat: 实现 MySQL 数据源部分功能；&#10;&#10;1. 数据源初始化&#10;2. 构造建表语句&#10;3. 建表功能">
+      <option name="closed" value="true" />
+      <created>1773653010503</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1773653010503</updated>
+    </task>
+    <task id="LOCAL-00004" summary="feat: 增强数据源 API，新增表列名查询与判断表存在功能；实现 MySQL 数据源核心方法；完善分页迭代器代码">
+      <option name="closed" value="true" />
+      <created>1773655546920</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1773655546920</updated>
+    </task>
+    <task id="LOCAL-00005" summary="feat: 抽离数据源支持集合到外部类；在分页迭代器中使用对象转换器代替强转；">
+      <option name="closed" value="true" />
+      <created>1773709973372</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1773709973372</updated>
+    </task>
+    <task id="LOCAL-00006" summary="feat: 实现 MySQL 数据源批量插入功能">
+      <option name="closed" value="true" />
+      <created>1773711128401</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1773711128401</updated>
+    </task>
+    <task id="LOCAL-00007" summary="feat: 实现 Influx 数据源核心功能">
+      <option name="closed" value="true" />
+      <created>1773714296273</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1773714296273</updated>
+    </task>
+    <task id="LOCAL-00008" summary="feat: 功能优化，移除无用的配置项，新增日志输出">
+      <option name="closed" value="true" />
+      <created>1773715592041</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1773715592041</updated>
+    </task>
+    <task id="LOCAL-00009" summary="feat: 一系列优化与新功能；&#10;&#10;1. 新增忽略字段配置，实现排除指定字段；&#10;2. 同步任务新增线程池，异步执行数据同步；&#10;3. 优化分页迭代器，使其线程安全；&#10;4. 修复同步时，未转换对象导致的 Influx 时间格式错误问题；&#10;5. 完善日志输出">
+      <option name="closed" value="true" />
+      <created>1773738033768</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1773738033768</updated>
+    </task>
+    <task id="LOCAL-00010" summary="refactor: 重命名项目">
+      <option name="closed" value="true" />
+      <created>1773739062200</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1773739062200</updated>
+    </task>
+    <task id="LOCAL-00011" summary="feat: 使用模板方法模式重构项目，提取字段忽略逻辑至模板方法父类；">
+      <option name="closed" value="true" />
+      <created>1773742090962</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1773742090962</updated>
+    </task>
+    <task id="LOCAL-00012" summary="refactor: 简化代码结构，重构同步任务执行器与数据源初始化逻辑&#10;&#10;1. 使用更清晰的命名替换原变量与方法（如 `failedTasks` 改为 `rejectedTasks` 等）。&#10;2. 移除未使用的 `DefaultTransactionDefinition` 导入。&#10;3. 提炼并增强配置初始化过程，新增验证与默认值支持。&#10;4. 优化异步任务的管理方式，确保任务完成后从列表移除。&#10;5. 重构 `MigrateExecutor` 和 `DatasourceInitializer` 核心逻辑，提升代码可读性与扩展性。&#10;6. 完善日志输出，增加错误提示与关键操作说明。">
+      <option name="closed" value="true" />
+      <created>1773804397849</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1773804397849</updated>
+    </task>
+    <task id="LOCAL-00013" summary="feat: 引入适配器，重构并扩展项目迁移功能  &#10;&#10;1. 项目整体包名重命名为 `dbmig`，统一与新命名规则；  &#10;2. 重构对象映射逻辑，新增数据适配器工厂与转换器：支持 MySQL 与 InfluxDB 数据互相适配；  &#10;3. 重构分页迭代器与同步逻辑，提升数据同步的灵活性与兼容性；  &#10;4. 引入抽象基础类 `BaseSourceData`，标准化数据源模型定义；  &#10;5. 优化项目依赖与 Maven 构建配置，升级部分工具链；  &#10;6. 更新 `application.yml` 日志配置；  &#10;7. 修复日志与错误处理细节问题，加强容错能力。">
+      <option name="closed" value="true" />
+      <created>1773826609724</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1773826609724</updated>
+    </task>
+    <task id="LOCAL-00014" summary="docs: 新增 readme.mdˆ">
+      <option name="closed" value="true" />
+      <created>1773827626306</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1773827626306</updated>
+    </task>
+    <task id="LOCAL-00015" summary="docs: 更新 readme.md, 新增开发阶段模块。&#10;&#10;build: 重命名 syncConf.yml 为 migConf.ymlˆ">
+      <option name="closed" value="true" />
+      <created>1773884718146</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1773884718146</updated>
+    </task>
+    <task id="LOCAL-00016" summary="build: 更新 .gitignoreˆ">
+      <option name="closed" value="true" />
+      <created>1773890396047</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1773890396047</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="init: 初始化提交，设计数据库同步器架构，实现配置加载与上下文初始化流程" />
+    <MESSAGE value="feat: 重构与增强, 重命名核心执行器为 `SyncExecutor`；实现数据同步流程与事务支持；优化数据源策略接口；新增分页迭代器类；提升扩展性与兼容性" />
+    <MESSAGE value="feat: 实现 MySQL 数据源部分功能；&#10;&#10;1. 数据源初始化&#10;2. 构造建表语句&#10;3. 建表功能" />
+    <MESSAGE value="feat: 增强数据源 API，新增表列名查询与判断表存在功能；实现 MySQL 数据源核心方法；完善分页迭代器代码" />
+    <MESSAGE value="feat: 抽离数据源支持集合到外部类；在分页迭代器中使用对象转换器代替强转；" />
+    <MESSAGE value="feat: 实现 MySQL 数据源批量插入功能" />
+    <MESSAGE value="feat: 实现 Influx 数据源核心功能" />
+    <MESSAGE value="feat: 功能优化，移除无用的配置项，新增日志输出" />
+    <MESSAGE value="feat: 一系列优化与新功能；&#10;&#10;1. 新增忽略字段配置，实现排除指定字段；&#10;2. 同步任务新增线程池，异步执行数据同步；&#10;3. 优化分页迭代器，使其线程安全；&#10;4. 修复同步时，未转换对象导致的 Influx 时间格式错误问题；&#10;5. 完善日志输出" />
+    <MESSAGE value="refactor: 重命名项目" />
+    <MESSAGE value="feat: 使用模板方法模式重构项目，提取字段忽略逻辑至模板方法父类；" />
+    <MESSAGE value="refactor: 简化代码结构，重构同步任务执行器与数据源初始化逻辑&#10;&#10;1. 使用更清晰的命名替换原变量与方法（如 `failedTasks` 改为 `rejectedTasks` 等）。&#10;2. 移除未使用的 `DefaultTransactionDefinition` 导入。&#10;3. 提炼并增强配置初始化过程，新增验证与默认值支持。&#10;4. 优化异步任务的管理方式，确保任务完成后从列表移除。&#10;5. 重构 `MigrateExecutor` 和 `DatasourceInitializer` 核心逻辑，提升代码可读性与扩展性。&#10;6. 完善日志输出，增加错误提示与关键操作说明。" />
+    <MESSAGE value="feat: 引入适配器，重构并扩展项目迁移功能  &#10;&#10;1. 项目整体包名重命名为 `dbmig`，统一与新命名规则；  &#10;2. 重构对象映射逻辑，新增数据适配器工厂与转换器：支持 MySQL 与 InfluxDB 数据互相适配；  &#10;3. 重构分页迭代器与同步逻辑，提升数据同步的灵活性与兼容性；  &#10;4. 引入抽象基础类 `BaseSourceData`，标准化数据源模型定义；  &#10;5. 优化项目依赖与 Maven 构建配置，升级部分工具链；  &#10;6. 更新 `application.yml` 日志配置；  &#10;7. 修复日志与错误处理细节问题，加强容错能力。" />
+    <MESSAGE value="docs: 新增 readme.md" />
+    <MESSAGE value="docs: 新增 readme.md" />
+    <MESSAGE value="docs: 更新 readme.md, 新增开发阶段模块。&#10;&#10;build: 重命名 syncConf.yml 为 migConf.yml" />
+    <MESSAGE value="docs: 更新 readme.md, 新增开发阶段模块。&#10;&#10;build: 重命名 syncConf.yml 为 migConf.yml" />
+    <MESSAGE value="build: 更新 .gitignore" />
+    <MESSAGE value="build: 更新 .gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="build: 更新 .gitignore" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint type="java-line">
+          <url>jar://$PROJECT_DIR$/../../../Enviroment/maven/repository/com/influxdb/influxdb3-java/1.7.0/influxdb3-java-1.7.0-sources.jar!/com/influxdb/v3/client/internal/InfluxDBClientImpl.java</url>
+          <line>366</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <condition expression="statusCode &gt; 300" language="JAVA" />
+          <url>jar://$PROJECT_DIR$/../../../Enviroment/maven/repository/com/influxdb/influxdb3-java/1.7.0/influxdb3-java-1.7.0-sources.jar!/com/influxdb/v3/client/internal/RestClient.java</url>
+          <line>218</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>
