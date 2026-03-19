@@ -4,12 +4,12 @@
 [![Java Version](https://img.shields.io/badge/Java-23-orange.svg)](https://www.oracle.com/java/technologies/javase/jdk23-archive-downloads.html)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.7-brightgreen.svg)](https://spring.io/projects/spring-boot)
 
-`db-synchronizer` 是一个高性能、轻量级的通用数据库同步工具，基于 Spring Boot 3.5 开发。旨在实现异构数据源（目前支持 MySQL 和
+`db-migrate` 是一个轻量级的通用数据库同步工具，基于 Spring Boot 3.5 开发。旨在实现异构数据源（目前支持 MySQL 和
 InfluxDB）之间的高效、灵活的数据迁移与同步。
 
 ## 🚀 核心特性
 
-- **多源支持**：支持 MySQL 与 InfluxDB 之间的双向数据同步（MySql ↔ InfluxDB）。
+- **多源支持**：目前支持 MySQL 到 InfluxDB 的数据同步。通过策略模式、模板方法模式和 SPI，提供良好的扩展性。
 - **高性能并行同步**：
     - 内置线程池，支持多表、多批次并行处理。
     - 智能分页机制，针对海量数据自动触发分页查询，降低内存压力。
@@ -35,14 +35,14 @@ InfluxDB）之间的高效、灵活的数据迁移与同步。
 ### 1. 克隆并编译
 
 ```bash
-git clone https://github.com/your-repo/db-synchronizer.git
-cd db-synchronizer
+git clone https://github.com/your-repo/db-migrate.git
+cd db-migrate
 mvn clean install
 ```
 
 ### 2. 配置同步任务
 
-修改 `src/main/resources/syncConf.yml` 文件，配置源端和目标端连接信息及同步策略。
+新建 `src/main/resources/migConf.yml` 文件，配置源端和目标端连接信息及同步策略。
 
 ```yaml
 mig:
