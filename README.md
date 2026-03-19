@@ -1,4 +1,4 @@
-# DB Synchronizer (db-mig)
+# DB Migrate (db-mig)
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![Java Version](https://img.shields.io/badge/Java-23-orange.svg)](https://www.oracle.com/java/technologies/javase/jdk23-archive-downloads.html)
