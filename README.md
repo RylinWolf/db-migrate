@@ -10,6 +10,8 @@
 
 - 支持 `MySQL -> InfluxDB`、`InfluxDB -> MySQL` 以及同类型源/目标之间的数据迁移。
 - 支持按库迁移和按表迁移两种模式。
+- 按表迁移支持显式表清单、正则匹配表名、表名别名映射。
+- 支持通过 `offset` 从指定偏移位置继续迁移，便于断点续跑或跳过历史数据。
 - 支持分页拉取、批量写入和并行执行，适合中到大规模数据迁移场景。
 - 支持全局字段忽略和 `null` 值过滤。
 - Influx 目标端支持将指定字段写入时间列与 tag 列。
@@ -65,6 +67,11 @@ mig:
     table:
       tables:
         - sensor_data
+      pattern:
+        - sensor_data_.*
+      aliasMap:
+        sensor_data: sensor_metric
+      offset: 1000
 
   db:
     source:
@@ -141,7 +148,10 @@ mig:
 |:--|:--|:--|
 | `mig.on-start` | 应用启动后是否立即执行迁移 | `false` |
 | `mig.core.mode` | 迁移模式 | `db`、`table` |
-| `mig.core.table.tables` | 按表迁移时的表名列表 | - |
+| `mig.core.table.tables` | 按表迁移时显式指定的表名列表 | - |
+| `mig.core.table.pattern` | 按表迁移时用于匹配源表名的正则列表 | - |
+| `mig.core.table.aliasMap` | 表名映射，格式为 `源表名:目标表名` | - |
+| `mig.core.table.offset` | 从第几条记录之后开始迁移 | `0` |
 | `mig.core.source-type` | 源数据源类型 | `mysql`、`influx` |
 | `mig.core.dest-type` | 目标数据源类型 | `mysql`、`influx` |
 | `mig.db.source` | 源端连接参数，字段结构随 `source-type` 变化 | - |
@@ -176,6 +186,37 @@ mig:
 | `timeFormat` | 自定义时间解析格式；未配置时按 `Instant.parse` 解析 | - |
 | `tagFields` | tag 字段映射，当前实现会读取映射的 `value` 作为 tag 字段名 | - |
 
+## 表模式增强
+
+当 `mig.core.mode=table` 时，当前实现支持三种选表方式，可混合使用：
+
+- `tables`：直接指定要迁移的源表名。
+- `pattern`：使用正则表达式从源端现有表中匹配目标表。
+- `aliasMap`：通过映射关系指定源表名和目标表名，写入目标端时会使用别名。
+
+其中：
+
+- 如果 `tables`、`pattern`、`aliasMap` 都未配置，初始化会直接报错。
+- `aliasMap` 的 key 会被视为源表名，value 会被视为目标端表名或 measurement 名。
+- `offset` 会写入迁移上下文，并作用于分页查询和全量查询，适合跳过已迁移数据。
+
+示例：
+
+```yaml
+mig:
+  core:
+    mode: table
+    table:
+      tables:
+        - orders
+      pattern:
+        - sensor_.*
+      aliasMap:
+        orders: orders_archive
+        sensor_data_2025: sensor_metric
+      offset: 50000
+```
+
 ## Influx 目标端行为
 
 当目标端类型为 `influx` 时，`InfluxSource` 的写入行为如下：
@@ -185,14 +226,6 @@ mig:
 - `timeFormat` 已配置时，时间值会按 `DateTimeFormatter.ofPattern(timeFormat)` 解析，再按系统时区转换为 `Instant`。
 - `tagFields` 用于区分哪些列写入 tag；未命中的列继续作为普通 field 写入。
 - 如果未配置 `tagFields`，则所有业务列都按 field 写入。
-
-推荐在不需要重命名 tag 的场景下使用同名映射 (ps: 暂时不支持重命名字段) ：
-
-```yaml
-tagFields:
-  - pointId
-  - deviceCode
-```
 
 ## 架构概览
 
@@ -206,25 +239,31 @@ tagFields:
 
 1. 项目当前编译目标为 Java 23，请确保本地 JDK 与 Maven 配置一致。
 2. `migConf.yml` 是本地运行配置，不要提交真实数据库密码或 Token。
-3. Influx 目标端不支持自动创建 schema，目标 measurement / 数据库应提前准备好。
+3. Influx 目标端不支持自动创建 schema，会在首次添加数据时自动创建。
 4. MySQL 目标端的自动建表为基础建表逻辑，复杂索引、约束和字段类型建议提前手动维护。
 5. 事务控制当前仅对 MySQL 作为目标端时有效。
 
 ## 开发阶段
 
+因精力有限，目前将项目分为四个阶段开发：
+
 - [x] 第一阶段：MySQL -> InfluxDB 数据迁移，从 MySQL 中获取指定的数据，存储入 InfluxDB 指定 measurement 中
-  - 提供 MySQL 至 InfluxDB 的数据映射功能
-  - 通过配置文件设置数据库用户名、密码、源库、源表等信息
-  - 支持按表/数据库导入，支持批量指定表名
-  - 支持排除字段
-  - 支持分页参数配置
-  - 通过开关控制是否启动时同步加载配置
+  - [x] 提供 MySQL 至 InfluxDB 的数据映射功能
+  - [x] 通过配置文件设置数据库用户名、密码、源库、源表等信息
+  - [x] 支持按表/数据库导入，支持批量指定表名
+  - [x] 支持排除字段
+  - [x] 支持分页参数配置
+  - [x] 通过开关控制是否启动时同步加载配置
 - [ ] 第二阶段：工具增强
   - [x] 重构架构，增加灵活性、可扩展性
   - [x] 支持目标表重命名
   - [x] 支持按照正则匹配源表名
+  - [x] 支持设置偏移量，从指定偏移量开始同步数据
   - [ ] 支持可选字段
   - [x] 新增数据适配器，包括不同类型数据对象的互相转换，重构 Influx 数据源，使用新的数据对象
+  - [x] 支持 Influx 时间字段配置 `timeField`
+  - [x] 支持 Influx 自定义时间解析格式 `timeFormat`
+  - [x] 支持 Influx tag 字段映射 `tagFields`
   - [ ] 更灵活的配置方式，通过 picocli 交互式补充文件中未填的配置项
 - [ ] 第三阶段：工具扩展
   - [ ] 实现更多可选的源数据库
@@ -235,6 +274,7 @@ tagFields:
 - [ ] 第四阶段：项目重构
   - [ ] 重构底层实现，增强工具可用性
   - [ ] 数据库增量同步功能，设计同步器架构
+  - [ ] 完善任务编排、断点恢复与更细粒度同步能力
 
 ## 开源协议
 
