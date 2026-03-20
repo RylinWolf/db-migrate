@@ -107,12 +107,7 @@ public class MigrateProperty {
                 log.warn("未设置迁移模式，使用默认值: DB");
                 mode = MigrateModeEnum.DB;
             }
-            // 按表迁移，但未配置表信息
-            if (mode == MigrateModeEnum.TABLE) {
-                if (table == null || table.tables() == null || table.tables().length == 0) {
-                    throw new NullPointerException("缺少必须的配置：core.table");
-                }
-            }
+            // 按表迁移，但未配置表信息的情况，在获取目标表时进行
         }
     }
 
@@ -132,7 +127,7 @@ public class MigrateProperty {
         }
     }
 
-    public record TableMode(String... tables) {
+    public record TableMode(String[] pattern, String[] tables, Map<String, String> aliasMap) {
     }
 
     public record Db(Map<String, Object> source, Map<String, Object> dest) {

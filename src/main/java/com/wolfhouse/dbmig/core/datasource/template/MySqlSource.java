@@ -33,7 +33,7 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     @Setter
     @Getter
     private boolean ignoreNull = false;
-    
+
     @Override
     public void initDatasource(BaseDbProperty prop) {
         if (!propertySupport(prop)) {
@@ -121,7 +121,7 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
 
     @Override
     public TableInfo getTableInfo(String tableName) {
-        return new TableInfo(tableName, count(tableName), columnNames(tableName).toArray(String[]::new));
+        return new TableInfo(tableName, tableName, count(tableName), columnNames(tableName).toArray(String[]::new));
     }
 
     @Override

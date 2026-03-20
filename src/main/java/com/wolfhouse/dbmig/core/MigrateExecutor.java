@@ -125,12 +125,13 @@ public class MigrateExecutor {
             BaseDataSourceTemplate.TableInfo table,
             MigrateProperty.Pagination pageConf) {
         String tableName = table.name();
+        String alias     = table.alias();
 
         // 表记录不存在，仅构建架构
         if (table.count() <= 0) {
             log.debug("表 {} 记录不存在，仅构建架构", table.name());
             try {
-                dest.createSchema(tableName, Arrays.asList(table.cols()));
+                dest.createSchema(alias, Arrays.asList(table.cols()));
             } catch (UnsupportedOperationException ignored) {
                 log.debug("架构为构建：数据源 {} 不支持构建架构", dest.getClass().getSimpleName());
             } catch (Exception e) {
@@ -149,7 +150,7 @@ public class MigrateExecutor {
                 }
                 log.debug("表 {} 分页同步数据, size: {}, num: {}, total: {}", tableName, page.pageSize(), page.pageNum(), page.total());
                 CompletableFuture<Void> task = CompletableFuture
-                        .runAsync(() -> syncBatch(dest, tableName, next), taskExecutor)
+                        .runAsync(() -> syncBatch(dest, tableName, alias, next), taskExecutor)
                         .exceptionally(t -> {
                             log.error("分页同步数据失败，table: {}, size: {}, num: {}", tableName, page.pageSize(), page.pageNum(), t);
                             return null;
@@ -161,7 +162,7 @@ public class MigrateExecutor {
         // 2. 未启用分页，全量查询
         log.debug("分页未启用或未触发，表 {} 全量同步数据", tableName);
         CompletableFuture<Void> task = CompletableFuture
-                .runAsync(() -> syncBatch(dest, tableName, source.queryAll(tableName)), taskExecutor)
+                .runAsync(() -> syncBatch(dest, tableName, alias, source.queryAll(tableName)), taskExecutor)
                 .exceptionally(t -> {
                     log.error("全量同步数据失败，table: {},", tableName, t);
                     return null;
@@ -179,6 +180,7 @@ public class MigrateExecutor {
      */
     private <T extends BaseSourceData> void syncBatch(BaseDataSourceTemplate<T> dest,
                                                       String tableName,
+                                                      String aliasName,
                                                       Collection<? extends BaseSourceData> data) {
         wrapTransaction(TransactionGranularityEnum.PAGE, () -> {
             // 获取适配器
@@ -189,8 +191,8 @@ public class MigrateExecutor {
             }
             // 使用适配器转换
             Collection<T> convertedData = adaptor.adaptFrom(data);
-            if (!dest.insertBatch(tableName, convertedData)) {
-                log.error("数据写入失败！table: {}, data size: {}", tableName, data.size());
+            if (!dest.insertBatch(aliasName, convertedData)) {
+                log.error("数据写入失败！table: {}, alias: {}, data size: {}", tableName, aliasName, data.size());
             }
         });
     }

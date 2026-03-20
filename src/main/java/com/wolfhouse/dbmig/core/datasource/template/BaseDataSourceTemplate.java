@@ -171,10 +171,11 @@ public abstract class BaseDataSourceTemplate<R extends BaseSourceData> {
      * 表信息封装
      *
      * @param name  表名
+     * @param alias 表名重命名
      * @param count 总记录行数
      * @param cols  列名
      */
-    public record TableInfo(String name, long count, String... cols) {
+    public record TableInfo(String name, String alias, long count, String... cols) {
         @Override
         @NonNull
         public String toString() {

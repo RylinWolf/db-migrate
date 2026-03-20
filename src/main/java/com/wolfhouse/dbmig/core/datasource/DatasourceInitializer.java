@@ -17,6 +17,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.function.Function;
@@ -150,30 +151,82 @@ public class DatasourceInitializer {
 
     private void loadDestTables(MigrateProperty prop) {
         // 1. 获取导入模式
-        MigrateProperty.Core core   = prop.getCore();
-        MigrateModeEnum      mode   = core.mode();
-        Set<String>          tables = new HashSet<>();
+        MigrateProperty.Core core = prop.getCore();
+        // 获取表配置
+        MigrateProperty.TableMode table = core.table();
+        // 别名映射
+        Map<String, String> aliasMap = table.aliasMap();
+        // 导入模式
+        MigrateModeEnum mode = core.mode();
+        // 目标表集合
+        Set<String> tables = new HashSet<>();
         switch (mode) {
-            case DB -> {
-                // 按库导入，则获取该库下的所有表
-                tables.addAll(context.sourceStrategy().tableNames());
-            }
-            case TABLE -> {
-                // 按表导入，添加配置的所有表
-                MigrateProperty.TableMode table = core.table();
-                if (table == null || table.tables() == null || table.tables().length == 0) {
-                    throw new IllegalArgumentException("按表导入模式: 未配置要导入的表!");
-                }
-                tables.addAll(Arrays.asList(table.tables()));
-            }
+            // 按库导入，则获取该库下的所有表
+            case DB -> tables.addAll(context.sourceStrategy().tableNames());
+            // 按表导入，添加配置的所有表
+            // 验证并添加表信息
+            case TABLE -> tables.addAll(getDestTables(table));
             default -> throw new IllegalArgumentException("不支持的导入模式: " + mode);
         }
         // 2. 封装表信息对象
         context.targetTableMap(tables.stream()
-                                     .map(name -> context.sourceStrategy().getTableInfo(name))
+                                     .map(name -> {
+                                         BaseDataSourceTemplate.TableInfo info = context.sourceStrategy().getTableInfo(name);
+                                         // 获取表名映射别名，若有别名则获取并构建为新的表信息对象
+                                         String alias = aliasMap.get(name);
+                                         if (!StringUtils.hasLength(alias)) {
+                                             return info;
+                                         }
+                                         return new BaseDataSourceTemplate.TableInfo(info.name(), alias, info.count(), info.cols());
+                                     })
                                      .filter(Objects::nonNull)
                                      .collect(Collectors.toMap(BaseDataSourceTemplate.TableInfo::name,
                                                                Function.identity())));
         log.debug("表信息对象加载完毕, 共有 {} 个表: {}", context.targetTableMap().size(), context.targetTableMap().keySet());
+    }
+
+    /**
+     * 获取所有目标表
+     *
+     * @param table 表信息
+     */
+    private Set<String> getDestTables(MigrateProperty.TableMode table) {
+        // 1. 校验表信息
+        if (table == null) {
+            throw new IllegalArgumentException("按表导入模式: 无表配置");
+        }
+        String[]            tables  = table.tables();
+        String[]            pattern = table.pattern();
+        Map<String, String> mapping = table.aliasMap();
+
+        boolean noTables  = tables == null || tables.length == 0;
+        boolean noPattern = pattern == null || pattern.length == 0;
+        boolean noMapping = mapping == null || mapping.isEmpty();
+
+        if (noTables && noPattern && noMapping) {
+            throw new IllegalArgumentException("按表导入模式: 未配置目标表");
+        }
+        // 2. 获取所有目标表
+        Set<String> destTables = new HashSet<>();
+        // 添加目标表
+        if (!noTables) {
+            destTables.addAll(Arrays.asList(tables));
+        }
+        // 若有正则匹配，则获取所有表名
+        if (!noPattern) {
+            Set<String> existTables = context.sourceStrategy().tableNames();
+            existTables.forEach(n -> {
+                for (String p : pattern) {
+                    if (n.matches(p)) {
+                        destTables.add(n);
+                    }
+                }
+            });
+        }
+        // 若有映射，则获取所有映射键
+        if (!noMapping) {
+            destTables.addAll(mapping.keySet());
+        }
+        return destTables;
     }
 }

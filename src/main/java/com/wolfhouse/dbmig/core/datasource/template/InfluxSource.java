@@ -122,7 +122,7 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
 
     @Override
     public TableInfo getTableInfo(String tableName) {
-        return new TableInfo(tableName, count(tableName), columnNames(tableName).toArray(String[]::new));
+        return new TableInfo(tableName, tableName, count(tableName), columnNames(tableName).toArray(String[]::new));
     }
 
     @Override
