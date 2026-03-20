@@ -19,14 +19,14 @@ public enum DbTypeEnum {
     INFLUX(InfluxSource.class, InfluxProperty.class),
     ;
 
-    /** 数据源策略类 */
-    public final Class<? extends BaseDataSourceTemplate<?>> strategy;
+    /** 数据源模板类 */
+    public final Class<? extends BaseDataSourceTemplate<?>> template;
     /** 数据库配置类 */
     public final Class<? extends BaseDbProperty>            property;
 
-    DbTypeEnum(Class<? extends BaseDataSourceTemplate<?>> strategy,
+    DbTypeEnum(Class<? extends BaseDataSourceTemplate<?>> template,
                Class<? extends BaseDbProperty> property) {
-        this.strategy = strategy;
+        this.template = template;
         this.property = property;
     }
 }

@@ -1,6 +1,5 @@
 package com.wolfhouse.dbmig.core.datasource.template;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.MybatisFlexBootstrap;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
@@ -31,15 +30,10 @@ import java.util.Set;
 @Slf4j
 @Accessors(fluent = true)
 public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
-    private final ObjectMapper objectMapper;
     @Setter
     @Getter
-    private       boolean      ignoreNull = false;
-
-    public MySqlSource(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-
+    private boolean ignoreNull = false;
+    
     @Override
     public void initDatasource(BaseDbProperty prop) {
         if (!propertySupport(prop)) {

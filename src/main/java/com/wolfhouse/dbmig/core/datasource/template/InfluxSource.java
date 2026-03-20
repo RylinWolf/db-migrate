@@ -13,6 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -26,8 +29,10 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
     private InfluxClient client;
     /** 时间字段列名 */
     private String       timeField;
+    /** 解析时间格式 */
+    private String       timeFormat;
     /** 标签列 */
-    private Set<String>  tagsField;
+    private Set<String>  tagFields;
 
     @Override
     public void initDatasource(BaseDbProperty prop) {
@@ -43,10 +48,11 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
                 ));
         log.debug("Influx 客户端初始化成功: {}", client.client.getServerVersion());
         // 配置时间字段与标签字段
-        timeField = influxProp.getTimeField();
-        String[] tags = influxProp.getTags();
-        if (tags != null) {
-            tagsField = Set.copyOf(Arrays.asList(tags));
+        timeField  = influxProp.getTimeField();
+        timeFormat = influxProp.getTimeFormat();
+        Map<String, String> tagFieldsMap = influxProp.getTagFields();
+        if (tagFieldsMap != null) {
+            tagFields = Set.copyOf(tagFieldsMap.values());
         }
         log.debug("Influx 数据源初始化完成");
     }
@@ -167,11 +173,14 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
      * @return 封装的标签字段记录
      */
     private InfluxExtractData extractData(Map<String, Object> data) {
-        Map<String, String> tags   = new HashMap<>();
-        Map<String, Object> fields = new HashMap<>();
+        if (this.tagFields == null) {
+            return new InfluxExtractData(Collections.emptyMap(), data);
+        }
+        Map<String, String> tags   = new HashMap<>(this.tagFields.size());
+        Map<String, Object> fields = new HashMap<>(data.size() - this.tagFields.size());
 
         data.keySet().forEach(k -> {
-            if (tagsField.contains(k)) {
+            if (tagFields.contains(k)) {
                 tags.put(k, data.get(k).toString());
                 return;
             }
@@ -197,12 +206,17 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
             // 设置字段
             addFields(InfluxFields.of(extractData.fields));
             // 若传递了时间字段，则设置时间
-            String time = data.getData().get(timeField).toString();
+            Object time = data.getData().get(timeField);
             if (timeField != null && time != null) {
-                setTime(Instant.parse(time));
+                // 按照时间格式解析
+                Instant instant = timeFormat == null ?
+                        Instant.parse(time.toString()) :
+                        LocalDateTime.parse(time.toString(), DateTimeFormatter.ofPattern(timeFormat))
+                                     .atZone(ZoneId.systemDefault())
+                                     .toInstant();
+
+                setTime(instant);
             }
-            // 初始化标签
-            this.tags = InfluxTags.instance();
             // 设置表名
             setMeasurement(tableName);
         }};

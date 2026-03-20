@@ -131,7 +131,7 @@ public class DatasourceInitializer {
             BaseDbProperty property = dbType.property.getDeclaredConstructor().newInstance();
             BeanUtils.copyProperties(objectMapper.convertValue(prop, dbType.property), property);
             // 通过反射构建该数据库的数据源对象
-            BaseDataSourceTemplate<?> template = dbType.strategy.getDeclaredConstructor(ObjectMapper.class).newInstance(objectMapper);
+            BaseDataSourceTemplate<?> template = dbType.template.getDeclaredConstructor().newInstance();
             // 初始化数据源
             log.debug("初始化数据源: {}", property);
             template.initDatasource(property);

@@ -16,11 +16,27 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class InfluxSourceTest {
+
+    private static Object readField(Object target, String name) throws Exception {
+        Field field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(target);
+    }
+
+    private static Object invokeExtractData(InfluxSource source, Map<String, Object> data) throws Exception {
+        Method method = InfluxSource.class.getDeclaredMethod("extractData", Map.class);
+        method.setAccessible(true);
+        return method.invoke(source, data);
+    }
+
+    private static Object invokeRecordAccessor(Object target, String name) throws Exception {
+        Method method = target.getClass().getDeclaredMethod(name);
+        method.setAccessible(true);
+        return method.invoke(target);
+    }
 
     @Test
     void initDatasource_appliesConfiguredTimeAndTagFields() throws Exception {
@@ -30,7 +46,7 @@ class InfluxSourceTest {
         property.setToken("secret-token");
         property.setDatabase("metrics");
         property.setTimeField("createdAt");
-        property.setTags(new String[]{"sensor", "region"});
+        property.setTagFields(Map.of("0", "region", "1", "sensor"));
 
         InfluxDBClient influxDbClient = mock(InfluxDBClient.class);
         when(influxDbClient.getServerVersion()).thenReturn("test-version");
@@ -70,23 +86,5 @@ class InfluxSourceTest {
         InfluxSource source = new InfluxSource();
 
         assertThrows(IllegalArgumentException.class, () -> source.initDatasource(new BaseDbProperty()));
-    }
-
-    private static Object readField(Object target, String name) throws Exception {
-        Field field = target.getClass().getDeclaredField(name);
-        field.setAccessible(true);
-        return field.get(target);
-    }
-
-    private static Object invokeExtractData(InfluxSource source, Map<String, Object> data) throws Exception {
-        Method method = InfluxSource.class.getDeclaredMethod("extractData", Map.class);
-        method.setAccessible(true);
-        return method.invoke(source, data);
-    }
-
-    private static Object invokeRecordAccessor(Object target, String name) throws Exception {
-        Method method = target.getClass().getDeclaredMethod(name);
-        method.setAccessible(true);
-        return method.invoke(target);
     }
 }
