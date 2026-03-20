@@ -44,11 +44,12 @@ public abstract class BaseDataSourceTemplate<R extends BaseSourceData> {
      * @param tableName 执行操作的目标表名
      * @param pageSize  每页大小
      * @param pageNum   页码
+     * @param offset    偏移量，从第 offset 条数据(不包括)开始查询
      * @return 查询到的数据集合
      */
-    public abstract List<R> queryBatch(String tableName, int pageSize, int pageNum);
+    public abstract List<R> queryBatch(String tableName, int pageSize, int pageNum, long offset);
 
-    public abstract PageIterator<R> page(String tableName, Integer pageSize);
+    public abstract PageIterator<R> page(String tableName, Integer pageSize, long offset);
 
     /**
      * 获取数据源中的数据总量
@@ -109,9 +110,10 @@ public abstract class BaseDataSourceTemplate<R extends BaseSourceData> {
      * 全量查询指定表的所有记录
      *
      * @param tableName 表名
+     * @param offset    偏移量
      * @return 记录集合
      */
-    public abstract Collection<R> queryAll(String tableName);
+    public abstract Collection<R> queryAll(String tableName, long offset);
 
     /**
      * 查询是否有指定表

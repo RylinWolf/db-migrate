@@ -142,7 +142,7 @@ public class MigrateExecutor {
         // 1. 若启用分页，则分页查询
         if (pageConf.enable() && pageConf.critical() <= table.count() && pageConf.size() > 0) {
             log.debug("满足分页条件: count: {}, config: {}", table.count(), pageConf);
-            PageIterator<T> page = source.page(tableName, pageConf.size());
+            PageIterator<T> page = source.page(tableName, pageConf.size(), context.offset());
             while (page.hasNext()) {
                 List<T> next = page.next();
                 if (CollectionUtils.isEmpty(next)) {
@@ -162,7 +162,7 @@ public class MigrateExecutor {
         // 2. 未启用分页，全量查询
         log.debug("分页未启用或未触发，表 {} 全量同步数据", tableName);
         CompletableFuture<Void> task = CompletableFuture
-                .runAsync(() -> syncBatch(dest, tableName, alias, source.queryAll(tableName)), taskExecutor)
+                .runAsync(() -> syncBatch(dest, tableName, alias, source.queryAll(tableName, context.offset())), taskExecutor)
                 .exceptionally(t -> {
                     log.error("全量同步数据失败，table: {},", tableName, t);
                     return null;

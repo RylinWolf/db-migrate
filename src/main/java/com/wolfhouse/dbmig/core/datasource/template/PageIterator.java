@@ -83,7 +83,11 @@ public class PageIterator<T extends BaseSourceData> implements Iterator<List<T>>
      * @param tableName    表名
      * @return 分页迭代器实例
      */
-    public static <T extends BaseSourceData> PageIterator<T> of(int pageSize, long total, QueryWrapper queryWrapper, String tableName, Function<Map<String, Object>, T> dataMapper) {
+    public static <T extends BaseSourceData> PageIterator<T> of(int pageSize,
+                                                                long total,
+                                                                QueryWrapper queryWrapper,
+                                                                String tableName,
+                                                                Function<Map<String, Object>, T> dataMapper) {
         return new PageIterator<>(pageSize, total, queryWrapper, tableName, dataMapper);
     }
 

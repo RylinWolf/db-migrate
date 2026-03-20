@@ -69,8 +69,8 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     }
 
     @Override
-    public List<MySqlData> queryBatch(String tableName, int pageSize, int pageNum) {
-        return Db.paginate(tableName, pageNum, pageSize, QueryWrapper.create())
+    public List<MySqlData> queryBatch(String tableName, int pageSize, int pageNum, long offset) {
+        return Db.paginate(tableName, pageNum, pageSize, QueryWrapper.create().offset(offset))
                  .getRecords()
                  .stream()
                  .map(r -> processIgnore(MySqlData.of(r.toCamelKeysMap())))
@@ -78,8 +78,8 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     }
 
     @Override
-    public PageIterator<MySqlData> page(String tableName, Integer pageSize) {
-        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create(), tableName, MySqlData::of);
+    public PageIterator<MySqlData> page(String tableName, Integer pageSize, long offset) {
+        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create().offset(offset), tableName, MySqlData::of);
     }
 
     @Override
@@ -138,9 +138,10 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     }
 
     @Override
-    public Collection<MySqlData> queryAll(String tableName) {
+    public Collection<MySqlData> queryAll(String tableName, long offset) {
         return Db.selectAll(tableName)
                  .stream()
+                 .skip(offset)
                  // 移除排除字段
                  .map(r -> processIgnore(MySqlData.of(r.toCamelKeysMap())))
                  .toList();

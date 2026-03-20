@@ -74,8 +74,8 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
     }
 
     @Override
-    public List<InfluxData> queryBatch(String tableName, int pageSize, int pageNum) {
-        InfluxPage<InfluxResult> res = client.pagination(InfluxQueryWrapper.create(tableName), InfluxResult.class, pageNum, pageSize);
+    public List<InfluxData> queryBatch(String tableName, int pageSize, int pageNum, long offset) {
+        InfluxPage<InfluxResult> res = client.pagination(InfluxQueryWrapper.create(tableName), InfluxResult.class, pageNum, pageSize, offset);
         return res.records().stream().map(r -> {
             List<Map<String, Object>> map = r.toMap();
             // 移除排除字段
@@ -84,13 +84,21 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
     }
 
     @Override
-    public PageIterator<InfluxData> page(String tableName, Integer pageSize) {
-        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create(), tableName, InfluxData::of);
+    public PageIterator<InfluxData> page(String tableName, Integer pageSize, long offset) {
+        return PageIterator.of(pageSize,
+                               count(tableName),
+                               QueryWrapper.create()
+                                           .offset(offset),
+                               tableName,
+                               InfluxData::of);
     }
 
     @Override
-    public Collection<InfluxData> queryAll(String tableName) {
-        List<Map<String, Object>> maps = client.queryMap(client.addQueryAll(InfluxQueryWrapper.create(tableName)));
+    public Collection<InfluxData> queryAll(String tableName, long offset) {
+        List<Map<String, Object>> maps = client.queryMap(client.addQueryAll(InfluxQueryWrapper.create(tableName))
+                                                               .modify()
+                                                               .offset(offset)
+                                                               .getParent());
         return maps.stream().map(m -> processIgnore(InfluxData.of(m)))
                    .toList();
     }

@@ -33,4 +33,9 @@ public class DatasourceContext {
     private MigrateProperty.Field                         field;
     /** 上下文就绪状态 */
     private boolean                                       ready;
+
+    // region 默认状态属性
+    /** 查找数据偏移量，跳过 offset 条数据 */
+    private long offset;
+    // endregion
 }

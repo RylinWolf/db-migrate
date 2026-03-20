@@ -68,6 +68,7 @@ public class DatasourceInitializer {
         propValid(prop);
         // 1. 加载配置
         loadConfig(prop);
+        loadDefaultConf(prop);
         // 2. 加载数据源
         loadSource(prop);
         // 3. 根据配置参数，获取目标数据表信息
@@ -120,6 +121,14 @@ public class DatasourceInitializer {
         log.debug("加载字段配置: {}", context.field());
     }
 
+    /** 加载默认值配置 */
+    private void loadDefaultConf(MigrateProperty prop) {
+        // 加载数据偏移量
+        Optional.ofNullable(prop.getCore())
+                .flatMap(core -> Optional.ofNullable(core.table()))
+                .ifPresent(t -> context.offset(t.offset()));
+    }
+
     /**
      * 初始化数据源。根据目标数据库类型获取对应的数据源策略、数据库配置并初始化。
      *
@@ -153,7 +162,7 @@ public class DatasourceInitializer {
         // 1. 获取导入模式
         MigrateProperty.Core core = prop.getCore();
         // 获取表配置
-        MigrateProperty.TableMode table = core.table();
+        MigrateProperty.TableConf table = core.table();
         // 别名映射
         Map<String, String> aliasMap = table.aliasMap();
         // 导入模式
@@ -190,7 +199,7 @@ public class DatasourceInitializer {
      *
      * @param table 表信息
      */
-    private Set<String> getDestTables(MigrateProperty.TableMode table) {
+    private Set<String> getDestTables(MigrateProperty.TableConf table) {
         // 1. 校验表信息
         if (table == null) {
             throw new IllegalArgumentException("按表导入模式: 无表配置");

@@ -94,7 +94,7 @@ public class MigrateProperty {
      * @param destType   目标数据库类型
      */
     public record Core(MigrateModeEnum mode,
-                       TableMode table,
+                       TableConf table,
                        DbTypeEnum sourceType,
                        DbTypeEnum destType) {
         public Core {
@@ -127,7 +127,15 @@ public class MigrateProperty {
         }
     }
 
-    public record TableMode(String[] pattern, String[] tables, Map<String, String> aliasMap) {
+    /**
+     * 数据表配置
+     *
+     * @param pattern  匹配表名，正则表达式
+     * @param tables   指定表名
+     * @param aliasMap 别名映射，格式 [源表名:目标表名]
+     * @param offset   偏移量，从第 offset 条数据开始迁移
+     */
+    public record TableConf(String[] pattern, String[] tables, Map<String, String> aliasMap, long offset) {
     }
 
     public record Db(Map<String, Object> source, Map<String, Object> dest) {
