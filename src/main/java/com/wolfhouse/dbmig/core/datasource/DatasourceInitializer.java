@@ -131,18 +131,18 @@ public class DatasourceInitializer {
             BaseDbProperty property = dbType.property.getDeclaredConstructor().newInstance();
             BeanUtils.copyProperties(objectMapper.convertValue(prop, dbType.property), property);
             // 通过反射构建该数据库的数据源对象
-            BaseDataSourceTemplate<?> strategy = dbType.strategy.getDeclaredConstructor(ObjectMapper.class).newInstance(objectMapper);
+            BaseDataSourceTemplate<?> template = dbType.strategy.getDeclaredConstructor(ObjectMapper.class).newInstance(objectMapper);
             // 初始化数据源
             log.debug("初始化数据源: {}", property);
-            strategy.initDatasource(property);
+            template.initDatasource(property);
             // 配置忽略字段
             MigrateProperty.Field field = context.field();
             if (field.ignore() != null) {
-                strategy.setIgnore(Arrays.asList(field.ignore()));
+                template.setIgnore(Arrays.asList(field.ignore()));
             }
             // 配置忽略空字段
-            strategy.setIgnoreNull(field.ignoreNull());
-            return strategy;
+            template.setIgnoreNull(field.ignoreNull());
+            return template;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

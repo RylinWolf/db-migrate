@@ -1,6 +1,5 @@
 package com.wolfhouse.dbmig.core.datasource.template;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.influxdb.v3.client.InfluxDBClient;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
@@ -13,6 +12,7 @@ import com.wolfhouse.influxclient.pojo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -22,13 +22,12 @@ import java.util.*;
  */
 @Slf4j
 public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
-    private final ObjectMapper objectMapper;
     /** Influx 客户端 */
-    private       InfluxClient client;
-
-    public InfluxSource(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
+    private InfluxClient client;
+    /** 时间字段列名 */
+    private String       timeField;
+    /** 标签列 */
+    private Set<String>  tagsField;
 
     @Override
     public void initDatasource(BaseDbProperty prop) {
@@ -43,6 +42,13 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
                         influxProp.getDatabase()
                 ));
         log.debug("Influx 客户端初始化成功: {}", client.client.getServerVersion());
+        // 配置时间字段与标签字段
+        timeField = influxProp.getTimeField();
+        String[] tags = influxProp.getTags();
+        if (tags != null) {
+            tagsField = Set.copyOf(Arrays.asList(tags));
+        }
+        log.debug("Influx 数据源初始化完成");
     }
 
     @Override
@@ -50,16 +56,7 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
         try {
             // 遍历 map，构造 Influx 操作对象
             List<AbstractActionInfluxObj> objs = new ArrayList<>();
-            data.forEach(m -> objs.add(new AbstractActionInfluxObj() {{
-                // 移除排除字段
-                Map<String, Object> ignoredMap = processIgnore(m).toMap();
-                // 设置字段
-                addFields(InfluxFields.of(ignoredMap));
-                // 初始化标签
-                this.tags = InfluxTags.instance();
-                // 设置表名
-                setMeasurement(tableName);
-            }}));
+            data.forEach(m -> objs.add(createObj(m, tableName)));
             int batchSize = calcPageSize(data);
             log.debug("表 {} 计算每批次数量: {}，执行分批插入", tableName, batchSize);
             client.insertBatch(objs, batchSize);
@@ -134,10 +131,20 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
 
     @Override
     public InfluxData processIgnore(BaseSourceData data) {
+        // 处理忽略字段
         InfluxData          influxData = (InfluxData) data;
         Map<String, Object> map        = influxData.toMap();
         map.entrySet().removeIf(e -> checkIgnore(e.getKey(), e.getValue()));
+        // 若配置了时间字段，则在这里也忽略，插入时特定处理
+        if (timeField != null) {
+            map.remove(timeField);
+        }
         return InfluxData.of(map);
+    }
+
+    @Override
+    public Class<InfluxData> getDataClazz() {
+        return InfluxData.class;
     }
 
     /**
@@ -153,8 +160,53 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
         return (int) Math.ceil((double) 10_000 / String.valueOf(data.iterator().next()).length());
     }
 
-    @Override
-    public Class<InfluxData> getDataClazz() {
-        return InfluxData.class;
+    /**
+     * 从数据中提取标签与字段
+     *
+     * @param data 要保存的数据
+     * @return 封装的标签字段记录
+     */
+    private InfluxExtractData extractData(Map<String, Object> data) {
+        Map<String, String> tags   = new HashMap<>();
+        Map<String, Object> fields = new HashMap<>();
+
+        data.keySet().forEach(k -> {
+            if (tagsField.contains(k)) {
+                tags.put(k, data.get(k).toString());
+                return;
+            }
+            fields.put(k, data.get(k));
+        });
+        return new InfluxExtractData(tags, fields);
     }
+
+    /**
+     * 根据 InfluxData 构建 Influx 保存数据对象
+     *
+     * @param data      InfluxData
+     * @param tableName 表名
+     * @return AbstractActionInfluxObj
+     */
+    private AbstractActionInfluxObj createObj(InfluxData data, String tableName) {
+        return new AbstractActionInfluxObj() {{
+            // 移除排除字段
+            Map<String, Object> ignoredMap  = processIgnore(data).toMap();
+            InfluxExtractData   extractData = extractData(ignoredMap);
+            // 设置标签
+            addTags(InfluxTags.of(extractData.tags));
+            // 设置字段
+            addFields(InfluxFields.of(extractData.fields));
+            // 若传递了时间字段，则设置时间
+            String time = data.getData().get(timeField).toString();
+            if (timeField != null && time != null) {
+                setTime(Instant.parse(time));
+            }
+            // 初始化标签
+            this.tags = InfluxTags.instance();
+            // 设置表名
+            setMeasurement(tableName);
+        }};
+    }
+
+    record InfluxExtractData(Map<String, String> tags, Map<String, Object> fields) {}
 }

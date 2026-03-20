@@ -40,3 +40,7 @@ build/
 .DS_Store
 
 src/main/resources/migConf.yml
+
+### AGENT ###
+CLAUDE.md
+AGENTS.md
