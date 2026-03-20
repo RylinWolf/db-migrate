@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -18,22 +17,21 @@ import java.util.Map;
  * @author Rylin Wolf
  */
 @ConfigurationProperties(prefix = "mig")
-@Configuration
 @Data
 @Slf4j
 public class MigrateProperty {
     /** 启动时加载配置 */
-    private boolean     onStart;
+    private boolean     onStart     = false;
     /** 事务配置 */
-    private Transaction transaction;
+    private Transaction transaction = new Transaction(false, null);
     /** 分页配置 */
-    private Pagination  pagination;
+    private Pagination  pagination  = new Pagination(true, 200, 200);
     /** 核心配置 */
     private Core        core;
     /** 数据库配置 */
     private Db          db;
     /** 字段配置 */
-    private Field       field;
+    private Field       field       = new Field(null, false);
 
     /**
      * 事务配置记录。注意：事务仅支持 MySQL 数据源作为目标源时才会生效

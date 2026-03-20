@@ -2,16 +2,12 @@ package com.wolfhouse.dbmig.properties;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * MySQL 数据库配置
  *
  * @author Rylin Wolf
  */
-@Configuration
-@ConfigurationProperties(prefix = "db.mysql")
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class MySqlProperty extends BaseDbProperty {

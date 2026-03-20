@@ -45,14 +45,24 @@ mvn test
 mvn spring-boot:run
 ```
 
-应用默认会从 `src/main/resources/application.yml` 中加载 `optional:classpath:migConf.yml`，因此本地运行时请在 `src/main/resources/migConf.yml` 中准备迁移配置。该文件已在 `.gitignore` 中忽略，不要提交真实凭据。
+### 作为依赖接入
+
+下游 Spring Boot 项目只需要：
+
+1. 引入 `dbmig` 依赖。
+2. 在自己的 `application.yml` 中配置 `mig.*`。
+3. 将 `mig.on-start` 设为 `true`，应用启动后就会自动执行迁移。
+
+项目已经通过 Spring Boot AutoConfiguration 自动注册 Bean，不需要下游额外编写 `@ComponentScan`、`@Import` 或手动创建执行器 Bean。
+
+仓库中的本地调试配置文件 `migConf.yml` 不会被打进依赖包；请把真实配置写在下游应用自己的配置文件里。
 
 ## 配置说明
 
-迁移配置分为两部分：
+迁移统一使用 `mig.*` 前缀：
 
 - `mig.*`：控制迁移模式、分页、事务、字段过滤以及当前任务使用的源/目标连接参数。
-- `db.*` 属性类：代码内部对应的配置模型，实际运行时由 `mig.db.source` 和 `mig.db.dest` 映射到具体数据源属性对象。
+- `mig.db.source` / `mig.db.dest`：会根据 `source-type` / `dest-type` 自动映射到具体数据源属性对象。
 
 ### 最小示例：MySQL -> InfluxDB
 
@@ -69,7 +79,7 @@ mig:
         - sensor_data
       pattern:
         - sensor_data_.*
-      aliasMap:
+      alias-map:
         sensor_data: sensor_metric
       offset: 1000
 
@@ -86,9 +96,9 @@ mig:
       port: 8181
       database: metrics
       token: ${INFLUX_TOKEN}
-      timeField: collectTime
-      timeFormat: yyyy-MM-dd'T'HH:mm:ss
-      tagFields:
+      time-field: collectTime
+      time-format: yyyy-MM-dd'T'HH:mm:ss
+      tag-fields:
         pointId: pointId
         deviceCode: deviceCode
 
@@ -150,7 +160,7 @@ mig:
 | `mig.core.mode` | 迁移模式 | `db`、`table` |
 | `mig.core.table.tables` | 按表迁移时显式指定的表名列表 | - |
 | `mig.core.table.pattern` | 按表迁移时用于匹配源表名的正则列表 | - |
-| `mig.core.table.aliasMap` | 表名映射，格式为 `源表名:目标表名` | - |
+| `mig.core.table.alias-map` | 表名映射，格式为 `源表名:目标表名` | - |
 | `mig.core.table.offset` | 从第几条记录之后开始迁移 | `0` |
 | `mig.core.source-type` | 源数据源类型 | `mysql`、`influx` |
 | `mig.core.dest-type` | 目标数据源类型 | `mysql`、`influx` |
@@ -182,9 +192,9 @@ mig:
 | `port` | Influx 端口 | `8181` |
 | `database` | 数据库名 / bucket 标识 | `dbMig` |
 | `token` | 访问令牌 | 读取环境变量 `INFLUX_TOKEN` |
-| `timeField` | 将源记录中的哪个字段写为 Influx 时间列 | - |
-| `timeFormat` | 自定义时间解析格式；未配置时按 `Instant.parse` 解析 | - |
-| `tagFields` | tag 字段映射，当前实现会读取映射的 `value` 作为 tag 字段名 | - |
+| `time-field` | 将源记录中的哪个字段写为 Influx 时间列 | - |
+| `time-format` | 自定义时间解析格式；未配置时按 `Instant.parse` 解析 | - |
+| `tag-fields` | tag 字段映射，当前实现会读取映射的 `value` 作为 tag 字段名 | - |
 
 ## 表模式增强
 
@@ -192,12 +202,12 @@ mig:
 
 - `tables`：直接指定要迁移的源表名。
 - `pattern`：使用正则表达式从源端现有表中匹配目标表。
-- `aliasMap`：通过映射关系指定源表名和目标表名，写入目标端时会使用别名。
+- `alias-map`：通过映射关系指定源表名和目标表名，写入目标端时会使用别名。
 
 其中：
 
-- 如果 `tables`、`pattern`、`aliasMap` 都未配置，初始化会直接报错。
-- `aliasMap` 的 key 会被视为源表名，value 会被视为目标端表名或 measurement 名。
+- 如果 `tables`、`pattern`、`alias-map` 都未配置，初始化会直接报错。
+- `alias-map` 的 key 会被视为源表名，value 会被视为目标端表名或 measurement 名。
 - `offset` 会写入迁移上下文，并作用于分页查询和全量查询，适合跳过已迁移数据。
 
 示例：
@@ -211,7 +221,7 @@ mig:
         - orders
       pattern:
         - sensor_.*
-      aliasMap:
+      alias-map:
         orders: orders_archive
         sensor_data_2025: sensor_metric
       offset: 50000
@@ -221,11 +231,11 @@ mig:
 
 当目标端类型为 `influx` 时，`InfluxSource` 的写入行为如下：
 
-- `timeField` 指定的字段不会作为普通 field 写入，而是会被提取为 Influx 记录时间。
-- `timeFormat` 为空时，时间值必须能被 `Instant.parse(...)` 解析。
-- `timeFormat` 已配置时，时间值会按 `DateTimeFormatter.ofPattern(timeFormat)` 解析，再按系统时区转换为 `Instant`。
-- `tagFields` 用于区分哪些列写入 tag；未命中的列继续作为普通 field 写入。
-- 如果未配置 `tagFields`，则所有业务列都按 field 写入。
+- `time-field` 指定的字段不会作为普通 field 写入，而是会被提取为 Influx 记录时间。
+- `time-format` 为空时，时间值必须能被 `Instant.parse(...)` 解析。
+- `time-format` 已配置时，时间值会按 `DateTimeFormatter.ofPattern(time-format)` 解析，再按系统时区转换为 `Instant`。
+- `tag-fields` 用于区分哪些列写入 tag；未命中的列继续作为普通 field 写入。
+- 如果未配置 `tag-fields`，则所有业务列都按 field 写入。
 
 ## 架构概览
 

@@ -1,0 +1,193 @@
+{
+  "groups": [
+    {
+      "name": "mig",
+      "type": "com.wolfhouse.dbmig.properties.MigrateProperty",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty"
+    },
+    {
+      "name": "mig.core",
+      "type": "com.wolfhouse.dbmig.properties.MigrateProperty$Core",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty"
+    },
+    {
+      "name": "mig.core.table",
+      "type": "com.wolfhouse.dbmig.properties.MigrateProperty$TableConf",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty"
+    },
+    {
+      "name": "mig.field",
+      "type": "com.wolfhouse.dbmig.properties.MigrateProperty$Field",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty"
+    },
+    {
+      "name": "mig.pagination",
+      "type": "com.wolfhouse.dbmig.properties.MigrateProperty$Pagination",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty"
+    },
+    {
+      "name": "mig.transaction",
+      "type": "com.wolfhouse.dbmig.properties.MigrateProperty$Transaction",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty"
+    }
+  ],
+  "properties": [
+    {
+      "name": "mig.on-start",
+      "type": "java.lang.Boolean",
+      "description": "Whether to initialize datasource context and start migration on application startup.",
+      "defaultValue": false,
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty"
+    },
+    {
+      "name": "mig.core.mode",
+      "type": "com.wolfhouse.dbmig.enums.MigrateModeEnum",
+      "description": "Migration mode. Defaults to DB when omitted.",
+      "defaultValue": "DB",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$Core"
+    },
+    {
+      "name": "mig.core.source-type",
+      "type": "com.wolfhouse.dbmig.enums.DbTypeEnum",
+      "description": "Source datasource type.",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$Core"
+    },
+    {
+      "name": "mig.core.dest-type",
+      "type": "com.wolfhouse.dbmig.enums.DbTypeEnum",
+      "description": "Destination datasource type.",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$Core"
+    },
+    {
+      "name": "mig.core.table.tables",
+      "type": "java.lang.String[]",
+      "description": "Explicit source table names when using table mode.",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$TableConf"
+    },
+    {
+      "name": "mig.core.table.pattern",
+      "type": "java.lang.String[]",
+      "description": "Regular expressions used to match source table names when using table mode.",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$TableConf"
+    },
+    {
+      "name": "mig.core.table.alias-map",
+      "type": "java.util.Map<java.lang.String,java.lang.String>",
+      "description": "Mapping from source table name to destination table or measurement name.",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$TableConf"
+    },
+    {
+      "name": "mig.core.table.offset",
+      "type": "java.lang.Long",
+      "description": "Skip records before this zero-based offset.",
+      "defaultValue": 0,
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$TableConf"
+    },
+    {
+      "name": "mig.field.ignore",
+      "type": "java.lang.String[]",
+      "description": "Global field names to ignore during migration.",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$Field"
+    },
+    {
+      "name": "mig.field.ignore-null",
+      "type": "java.lang.Boolean",
+      "description": "Whether to skip fields whose values are null.",
+      "defaultValue": false,
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$Field"
+    },
+    {
+      "name": "mig.pagination.enable",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable pagination.",
+      "defaultValue": true,
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$Pagination"
+    },
+    {
+      "name": "mig.pagination.size",
+      "type": "java.lang.Integer",
+      "description": "Page size used when pagination is enabled.",
+      "defaultValue": 200,
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$Pagination"
+    },
+    {
+      "name": "mig.pagination.critical",
+      "type": "java.lang.Integer",
+      "description": "Minimum record count that triggers pagination when it is enabled.",
+      "defaultValue": 200,
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$Pagination"
+    },
+    {
+      "name": "mig.transaction.enable",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable transactions. Only takes effect when the destination datasource supports it.",
+      "defaultValue": false,
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$Transaction"
+    },
+    {
+      "name": "mig.transaction.gran",
+      "type": "com.wolfhouse.dbmig.enums.TransactionGranularityEnum",
+      "description": "Transaction granularity. Defaults to PAGE when transactions are enabled but granularity is omitted.",
+      "defaultValue": "PAGE",
+      "sourceType": "com.wolfhouse.dbmig.properties.MigrateProperty$Transaction"
+    }
+  ],
+  "hints": [
+    {
+      "name": "mig.core.mode",
+      "values": [
+        {
+          "value": "DB",
+          "description": "Migrate all tables from the source datasource."
+        },
+        {
+          "value": "TABLE",
+          "description": "Migrate only tables selected by tables, pattern, or alias-map."
+        }
+      ]
+    },
+    {
+      "name": "mig.core.source-type",
+      "values": [
+        {
+          "value": "MYSQL",
+          "description": "Use MySQL as the source datasource."
+        },
+        {
+          "value": "INFLUX",
+          "description": "Use InfluxDB as the source datasource."
+        }
+      ]
+    },
+    {
+      "name": "mig.core.dest-type",
+      "values": [
+        {
+          "value": "MYSQL",
+          "description": "Use MySQL as the destination datasource."
+        },
+        {
+          "value": "INFLUX",
+          "description": "Use InfluxDB as the destination datasource."
+        }
+      ]
+    },
+    {
+      "name": "mig.transaction.gran",
+      "values": [
+        {
+          "value": "PAGE",
+          "description": "Open one transaction per page."
+        },
+        {
+          "value": "TABLE",
+          "description": "Open one transaction per table."
+        },
+        {
+          "value": "TASK",
+          "description": "Open one transaction for the whole migration task."
+        }
+      ]
+    }
+  ]
+}

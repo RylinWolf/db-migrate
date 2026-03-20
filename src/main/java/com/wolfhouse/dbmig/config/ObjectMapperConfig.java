@@ -13,6 +13,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,6 +29,7 @@ import java.time.LocalTime;
 @Configuration
 public class ObjectMapperConfig {
     @Bean
+    @ConditionalOnMissingBean
     public ObjectMapper objectMapper() {
         SimpleModule module = new JavaTimeModule().addSerializer(LocalDateTime.class, LocalDateTimeSerializer.INSTANCE)
                                                   .addSerializer(LocalDate.class, LocalDateSerializer.INSTANCE)

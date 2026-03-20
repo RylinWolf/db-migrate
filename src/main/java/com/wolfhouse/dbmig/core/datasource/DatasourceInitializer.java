@@ -14,9 +14,6 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
@@ -28,7 +25,6 @@ import java.util.stream.Collectors;
  *
  * @author Rylin Wolf
  */
-@Component
 @Slf4j
 @RequiredArgsConstructor
 @Data
@@ -40,16 +36,6 @@ public class DatasourceInitializer {
     private final ObjectMapper      objectMapper;
     /** 数据源上下文 */
     private final DatasourceContext context;
-
-
-    @EventListener(value = ContextRefreshedEvent.class)
-    void initOnStart() {
-        if (!migrateProperty.isOnStart()) {
-            // 未启用启动时加载
-            return;
-        }
-        init();
-    }
 
     /**
      * 初始化配置，加载数据源、目标表等信息
@@ -164,7 +150,7 @@ public class DatasourceInitializer {
         // 获取表配置
         MigrateProperty.TableConf table = core.table();
         // 别名映射
-        Map<String, String> aliasMap = table.aliasMap();
+        Map<String, String> aliasMap = table == null || table.aliasMap() == null ? Collections.emptyMap() : table.aliasMap();
         // 导入模式
         MigrateModeEnum mode = core.mode();
         // 目标表集合

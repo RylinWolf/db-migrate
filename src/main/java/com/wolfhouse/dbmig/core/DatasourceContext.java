@@ -4,7 +4,6 @@ import com.wolfhouse.dbmig.core.datasource.template.BaseDataSourceTemplate;
 import com.wolfhouse.dbmig.properties.MigrateProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
@@ -13,7 +12,6 @@ import java.util.Map;
  *
  * @author Rylin Wolf
  */
-@Component
 @Data
 @Accessors(fluent = true)
 public class DatasourceContext {

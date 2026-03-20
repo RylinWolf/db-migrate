@@ -1,6 +1,5 @@
 package com.wolfhouse.dbmig.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.row.Db;
 import com.wolfhouse.dbmig.core.datasource.adaptor.AdaptorFactory;
 import com.wolfhouse.dbmig.core.datasource.adaptor.BaseDataAdaptor;
@@ -15,7 +14,6 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -30,14 +28,12 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Rylin Wolf
  */
-@Component
 @RequiredArgsConstructor
 @Data
 @Slf4j
 public class MigrateExecutor {
     /** 数据源上下文 */
     private final DatasourceContext          context;
-    private final ObjectMapper               objectMapper;
     private       ThreadPoolTaskExecutor     taskExecutor;
     /** 失败任务列表 */
     private       List<Runnable>             rejectedTasks;
