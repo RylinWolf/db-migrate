@@ -1,9 +1,13 @@
 package com.wolfhouse.dbmig.core.datasource.template;
 
+import com.mybatisflex.core.FlexGlobalConfig;
 import com.mybatisflex.core.MybatisFlexBootstrap;
+import com.mybatisflex.core.datasource.DataSourceKey;
+import com.mybatisflex.core.datasource.FlexDataSource;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
 import com.mybatisflex.core.row.Row;
+import com.wolfhouse.dbmig.constant.MigConstant;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.MySqlData;
 import com.wolfhouse.dbmig.properties.BaseDbProperty;
@@ -21,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * MySQL 数据源
@@ -45,8 +50,15 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         ds.setPassword(mysqlProp.getPassword());
         ds.setJdbcUrl("jdbc:mysql://%s:%s/%s".formatted(mysqlProp.getHost(), mysqlProp.getPort(), mysqlProp.getDatabase()));
         ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        // 兼容 Spring Boot 环境
+        FlexDataSource defaultDs = FlexGlobalConfig.getDefaultConfig().getDataSource();
+        if (defaultDs != null) {
+            defaultDs.addDataSource(MigConstant.DATASOURCE_KEY, ds);
+            return;
+        }
+        // 回落保底
         MybatisFlexBootstrap.getInstance()
-                            .setDataSource(ds)
+                            .addDataSource(MigConstant.DATASOURCE_KEY, ds)
                             .setLogImpl(Slf4jImpl.class)
                             .start();
     }
@@ -60,7 +72,9 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
                 row.putAll(processIgnore(m).toMap());
                 return row;
             }).toList();
-            Db.insertBatch(tableName, rowList);
+            DataSourceKey.use(MigConstant.DATASOURCE_KEY, () -> {
+                Db.insertBatch(tableName, rowList);
+            });
             return true;
         } catch (Exception e) {
             log.error("批量添加数据失败！", e);
@@ -70,11 +84,11 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
 
     @Override
     public List<MySqlData> queryBatch(String tableName, int pageSize, int pageNum, long offset) {
-        return Db.paginate(tableName, pageNum, pageSize, QueryWrapper.create().offset(offset))
-                 .getRecords()
-                 .stream()
-                 .map(r -> processIgnore(MySqlData.of(r.toCamelKeysMap())))
-                 .toList();
+        return dataSourceKeySurround(() -> Db.paginate(tableName, pageNum, pageSize, QueryWrapper.create().offset(offset))
+                                             .getRecords()
+                                             .stream()
+                                             .map(r -> processIgnore(MySqlData.of(r.toCamelKeysMap())))
+                                             .toList());
     }
 
     @Override
@@ -84,23 +98,25 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
 
     @Override
     public long count(String tableName) {
-        return Db.selectCountByQuery(tableName, QueryWrapper.create());
+        return dataSourceKeySurround(() -> Db.selectCountByQuery(tableName, QueryWrapper.create()));
     }
 
     @Override
     public Set<String> tableNames() {
         // 执行原生的 SHOW TABLES 语句
-        List<String> tables = Db.selectListBySql("SHOW TABLES")
-                                .stream()
-                                .map(map -> map.values().iterator().next().toString())
-                                .toList();
-
-        return Set.copyOf(tables);
+        return Set.copyOf(dataSourceKeySurround(
+                () -> Db.selectListBySql("SHOW TABLES")
+                        .stream()
+                        .map(map -> map.values()
+                                       .iterator()
+                                       .next()
+                                       .toString())
+                        .toList()));
     }
 
     @Override
     public Set<String> columnNames(String tableName) {
-        List<Row> rows = Db.selectListBySql("SHOW COLUMNS FROM `%s`".formatted(tableName));
+        List<Row> rows = dataSourceKeySurround(() -> Db.selectListBySql("SHOW COLUMNS FROM `%s`".formatted(tableName)));
         if (CollectionUtils.isEmpty(rows)) {
             return Set.of();
         }
@@ -134,17 +150,17 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         if (!StringUtils.hasLength(name) || CollectionUtils.isEmpty(cols)) {
             return;
         }
-        Db.updateBySql(buildTable(name, cols));
+        DataSourceKey.use(MigConstant.DATASOURCE_KEY, () -> Db.updateBySql(buildTable(name, cols)));
     }
 
     @Override
     public Collection<MySqlData> queryAll(String tableName, long offset) {
-        return Db.selectAll(tableName)
-                 .stream()
-                 .skip(offset)
-                 // 移除排除字段
-                 .map(r -> processIgnore(MySqlData.of(r.toCamelKeysMap())))
-                 .toList();
+        return dataSourceKeySurround(() -> Db.selectAll(tableName)
+                                             .stream()
+                                             .skip(offset)
+                                             // 移除排除字段
+                                             .map(r -> processIgnore(MySqlData.of(r.toCamelKeysMap())))
+                                             .toList());
     }
 
     @Override
@@ -153,6 +169,11 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         Map<String, Object> map       = mysqlData.toMap();
         map.entrySet().removeIf(e -> checkIgnore(e.getKey(), e.getValue()));
         return MySqlData.of(map);
+    }
+
+    @Override
+    public Class<MySqlData> getDataClazz() {
+        return MySqlData.class;
     }
 
     private String buildTable(String tableName, Collection<String> cols) {
@@ -165,8 +186,12 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         return sb.toString();
     }
 
-    @Override
-    public Class<MySqlData> getDataClazz() {
-        return MySqlData.class;
+    private <T> T dataSourceKeySurround(Supplier<T> supplier) {
+        try {
+            DataSourceKey.use(MigConstant.DATASOURCE_KEY);
+            return supplier.get();
+        } finally {
+            DataSourceKey.clear();
+        }
     }
 }

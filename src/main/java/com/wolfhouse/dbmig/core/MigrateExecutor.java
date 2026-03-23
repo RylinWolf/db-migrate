@@ -89,8 +89,8 @@ public class MigrateExecutor {
             return;
         }
         log.info("开始数据同步");
-        BaseDataSourceTemplate<?>  source   = context.sourceStrategy();
-        BaseDataSourceTemplate<?>  dest     = context.destStrategy();
+        BaseDataSourceTemplate<?>  source   = context.sourceTemplate();
+        BaseDataSourceTemplate<?>  dest     = context.destTemplate();
         MigrateProperty.Pagination pageConf = context.pagination();
 
         // 遍历表信息映射，事务级别 任务

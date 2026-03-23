@@ -84,14 +84,14 @@ public class DatasourceInitializer {
      */
     private void loadSource(MigrateProperty prop) {
         // 1. 加载源数据源
-        context.sourceStrategy(initAndGetDatasource(prop.getDb().source(), prop.getCore().sourceType()));
-        log.debug("源数据源已加载: {}", context.sourceStrategy());
+        context.sourceTemplate(initAndGetDatasource(prop.getDb().source(), prop.getCore().sourceType()));
+        log.debug("源数据源已加载: {}", context.sourceTemplate());
         // 2. 加载目标数据源
-        context.destStrategy(initAndGetDatasource(prop.getDb().dest(), prop.getCore().destType()));
-        log.debug("目标数据源已加载: {}", context.destStrategy());
+        context.destTemplate(initAndGetDatasource(prop.getDb().dest(), prop.getCore().destType()));
+        log.debug("目标数据源已加载: {}", context.destTemplate());
         // 3. 检查兼容性
-        if (!context.sourceStrategy().strategySupport(context.destStrategy())) {
-            throw new UnsupportedOperationException("不兼容的数据源策略! source: %s, dest: %s".formatted(context.sourceStrategy(), context.destStrategy()));
+        if (!context.sourceTemplate().strategySupport(context.destTemplate())) {
+            throw new UnsupportedOperationException("不兼容的数据源策略! source: %s, dest: %s".formatted(context.sourceTemplate(), context.destTemplate()));
         }
     }
 
@@ -157,7 +157,7 @@ public class DatasourceInitializer {
         Set<String> tables = new HashSet<>();
         switch (mode) {
             // 按库导入，则获取该库下的所有表
-            case DB -> tables.addAll(context.sourceStrategy().tableNames());
+            case DB -> tables.addAll(context.sourceTemplate().tableNames());
             // 按表导入，添加配置的所有表
             // 验证并添加表信息
             case TABLE -> tables.addAll(getDestTables(table));
@@ -166,7 +166,7 @@ public class DatasourceInitializer {
         // 2. 封装表信息对象
         context.targetTableMap(tables.stream()
                                      .map(name -> {
-                                         BaseDataSourceTemplate.TableInfo info = context.sourceStrategy().getTableInfo(name);
+                                         BaseDataSourceTemplate.TableInfo info = context.sourceTemplate().getTableInfo(name);
                                          // 获取表名映射别名，若有别名则获取并构建为新的表信息对象
                                          String alias = aliasMap.get(name);
                                          if (!StringUtils.hasLength(alias)) {
@@ -209,7 +209,7 @@ public class DatasourceInitializer {
         }
         // 若有正则匹配，则获取所有表名
         if (!noPattern) {
-            Set<String> existTables = context.sourceStrategy().tableNames();
+            Set<String> existTables = context.sourceTemplate().tableNames();
             existTables.forEach(n -> {
                 for (String p : pattern) {
                     if (n.matches(p)) {

@@ -16,9 +16,9 @@ import java.util.Map;
 @Accessors(fluent = true)
 public class DatasourceContext {
     /** 源数据源 */
-    private BaseDataSourceTemplate<?>                     sourceStrategy;
+    private BaseDataSourceTemplate<?>                     sourceTemplate;
     /** 目标数据源 */
-    private BaseDataSourceTemplate<?>                     destStrategy;
+    private BaseDataSourceTemplate<?>                     destTemplate;
     /** 目标表映射 */
     private Map<String, BaseDataSourceTemplate.TableInfo> targetTableMap;
     /** 事务配置 */
