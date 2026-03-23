@@ -3,13 +3,13 @@ package com.wolfhouse.dbmig.core.datasource.template;
 import com.mybatisflex.core.FlexGlobalConfig;
 import com.mybatisflex.core.MybatisFlexBootstrap;
 import com.mybatisflex.core.datasource.DataSourceKey;
-import com.mybatisflex.core.datasource.FlexDataSource;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
 import com.mybatisflex.core.row.Row;
 import com.wolfhouse.dbmig.constant.MigConstant;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.MySqlData;
+import com.wolfhouse.dbmig.core.datasource.template.page.MysqlPager;
 import com.wolfhouse.dbmig.properties.BaseDbProperty;
 import com.wolfhouse.dbmig.properties.MySqlProperty;
 import com.zaxxer.hikari.HikariDataSource;
@@ -18,6 +18,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.logging.slf4j.Slf4jImpl;
+import org.apache.ibatis.session.Configuration;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -94,8 +95,8 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     }
 
     @Override
-    public PageIterator<MySqlData> page(String tableName, Integer pageSize, long offset) {
-        return PageIterator.of(pageSize, count(tableName), QueryWrapper.create().offset(offset), tableName, MySqlData::of);
+    public MysqlPager<MySqlData> page(String tableName, Integer pageSize, long offset) {
+        return MysqlPager.of(pageSize, count(tableName), QueryWrapper.create().offset(offset), tableName, MySqlData::of);
     }
 
     @Override
@@ -133,8 +134,8 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     }
 
     @Override
-    public boolean strategySupport(BaseDataSourceTemplate<?> strategy) {
-        return StrategySupports.MYSQL.contains(strategy.getClass());
+    public boolean datasourceSupport(BaseDataSourceTemplate<?> strategy) {
+        return DatasourceSupports.MYSQL.contains(strategy.getClass());
     }
 
     @Override

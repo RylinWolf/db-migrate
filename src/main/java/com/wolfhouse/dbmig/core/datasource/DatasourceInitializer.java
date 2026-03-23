@@ -90,7 +90,7 @@ public class DatasourceInitializer {
         context.destTemplate(initAndGetDatasource(prop.getDb().dest(), prop.getCore().destType()));
         log.debug("目标数据源已加载: {}", context.destTemplate());
         // 3. 检查兼容性
-        if (!context.sourceTemplate().strategySupport(context.destTemplate())) {
+        if (!context.sourceTemplate().datasourceSupport(context.destTemplate())) {
             throw new UnsupportedOperationException("不兼容的数据源策略! source: %s, dest: %s".formatted(context.sourceTemplate(), context.destTemplate()));
         }
     }

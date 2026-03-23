@@ -7,7 +7,7 @@ import java.util.Set;
  *
  * @author Rylin Wolf
  */
-public final class StrategySupports {
+public final class DatasourceSupports {
     /** MySQL 数据源支持的源 */
     public static final Set<Class<? extends BaseDataSourceTemplate<?>>> MYSQL  = Set.of(MySqlSource.class,
                                                                                         InfluxSource.class);
@@ -15,6 +15,6 @@ public final class StrategySupports {
     public static final Set<Class<? extends BaseDataSourceTemplate<?>>> INFLUX = Set.of(InfluxSource.class,
                                                                                         MySqlSource.class);
 
-    private StrategySupports() {
+    private DatasourceSupports() {
     }
 }

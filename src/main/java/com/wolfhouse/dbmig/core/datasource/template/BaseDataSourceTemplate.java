@@ -1,6 +1,7 @@
 package com.wolfhouse.dbmig.core.datasource.template;
 
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
+import com.wolfhouse.dbmig.core.datasource.template.page.MysqlPager;
 import com.wolfhouse.dbmig.properties.BaseDbProperty;
 import org.jspecify.annotations.NonNull;
 
@@ -49,7 +50,7 @@ public abstract class BaseDataSourceTemplate<R extends BaseSourceData> {
      */
     public abstract List<R> queryBatch(String tableName, int pageSize, int pageNum, long offset);
 
-    public abstract PageIterator<R> page(String tableName, Integer pageSize, long offset);
+    public abstract MysqlPager<R> page(String tableName, Integer pageSize, long offset);
 
     /**
      * 获取数据源中的数据总量
@@ -88,7 +89,7 @@ public abstract class BaseDataSourceTemplate<R extends BaseSourceData> {
      * @param strategy 数据源策略类型
      * @return 是否支持
      */
-    public abstract boolean strategySupport(BaseDataSourceTemplate<?> strategy);
+    public abstract boolean datasourceSupport(BaseDataSourceTemplate<?> strategy);
 
     /**
      * 获取指定表的表信息封装

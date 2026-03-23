@@ -1,20 +1,17 @@
-package com.wolfhouse.dbmig.core.datasource.template;
+package com.wolfhouse.dbmig.core.datasource.template.page;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
-import lombok.Getter;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 /**
- * 分页迭代器
+ * MySQL 分页迭代器
  * <p>
  * 用于分页查询数据库表数据，支持迭代访问每一页的数据。
  * 通过 MyBatis-Flex 的分页查询功能实现数据分页加载，
@@ -25,17 +22,7 @@ import java.util.function.Function;
  * @author Rylin Wolf
  */
 @Accessors(fluent = true)
-public class PageIterator<T extends BaseSourceData> implements Iterator<List<T>> {
-    /**
-     * 每页数据量
-     */
-    @Getter
-    private final int          pageSize;
-    /**
-     * 数据总数
-     */
-    @Getter
-    private final long         total;
+public class MysqlPager<T extends BaseSourceData> extends BasePageIterator<T> {
     /**
      * 查询条件包装器
      */
@@ -44,11 +31,7 @@ public class PageIterator<T extends BaseSourceData> implements Iterator<List<T>>
      * 表名
      */
     private final String       tableName;
-    /**
-     * 当前页码，从 0 开始
-     */
-    @Getter
-    private final AtomicLong   pageNum = new AtomicLong(0);
+
 
     private final Function<Map<String, Object>, T> dataMapper;
 
@@ -61,13 +44,12 @@ public class PageIterator<T extends BaseSourceData> implements Iterator<List<T>>
      * @param tableName    表名
      * @param dataMapper   数据映射器，用于将数据库行映射为目标数据类型
      */
-    private PageIterator(int pageSize,
-                         long total,
-                         QueryWrapper queryWrapper,
-                         String tableName,
-                         Function<Map<String, Object>, T> dataMapper) {
-        this.pageSize   = pageSize;
-        this.total      = total;
+    private MysqlPager(int pageSize,
+                       long total,
+                       QueryWrapper queryWrapper,
+                       String tableName,
+                       Function<Map<String, Object>, T> dataMapper) {
+        super(pageSize, total);
         this.wrapper    = queryWrapper;
         this.tableName  = tableName;
         this.dataMapper = dataMapper;
@@ -83,12 +65,12 @@ public class PageIterator<T extends BaseSourceData> implements Iterator<List<T>>
      * @param tableName    表名
      * @return 分页迭代器实例
      */
-    public static <T extends BaseSourceData> PageIterator<T> of(int pageSize,
-                                                                long total,
-                                                                QueryWrapper queryWrapper,
-                                                                String tableName,
-                                                                Function<Map<String, Object>, T> dataMapper) {
-        return new PageIterator<>(pageSize, total, queryWrapper, tableName, dataMapper);
+    public static <T extends BaseSourceData> MysqlPager<T> of(int pageSize,
+                                                              long total,
+                                                              QueryWrapper queryWrapper,
+                                                              String tableName,
+                                                              Function<Map<String, Object>, T> dataMapper) {
+        return new MysqlPager<>(pageSize, total, queryWrapper, tableName, dataMapper);
     }
 
     /**

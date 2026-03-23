@@ -5,7 +5,7 @@ import com.wolfhouse.dbmig.core.datasource.adaptor.AdaptorFactory;
 import com.wolfhouse.dbmig.core.datasource.adaptor.BaseDataAdaptor;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
 import com.wolfhouse.dbmig.core.datasource.template.BaseDataSourceTemplate;
-import com.wolfhouse.dbmig.core.datasource.template.PageIterator;
+import com.wolfhouse.dbmig.core.datasource.template.page.BasePageIterator;
 import com.wolfhouse.dbmig.enums.TransactionGranularityEnum;
 import com.wolfhouse.dbmig.properties.MigrateProperty;
 import jakarta.annotation.PostConstruct;
@@ -138,7 +138,7 @@ public class MigrateExecutor {
         // 1. 若启用分页，则分页查询
         if (pageConf.enable() && pageConf.critical() <= table.count() && pageConf.size() > 0) {
             log.debug("满足分页条件: count: {}, config: {}", table.count(), pageConf);
-            PageIterator<T> page = source.page(tableName, pageConf.size(), context.offset());
+            BasePageIterator<T> page = source.page(tableName, pageConf.size(), context.offset());
             while (page.hasNext()) {
                 List<T> next = page.next();
                 if (CollectionUtils.isEmpty(next)) {

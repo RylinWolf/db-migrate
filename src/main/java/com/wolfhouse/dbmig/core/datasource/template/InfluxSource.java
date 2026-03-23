@@ -4,6 +4,7 @@ import com.influxdb.v3.client.InfluxDBClient;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.InfluxData;
+import com.wolfhouse.dbmig.core.datasource.template.page.MysqlPager;
 import com.wolfhouse.dbmig.properties.BaseDbProperty;
 import com.wolfhouse.dbmig.properties.InfluxProperty;
 import com.wolfhouse.influxclient.client.InfluxClient;
@@ -84,13 +85,13 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
     }
 
     @Override
-    public PageIterator<InfluxData> page(String tableName, Integer pageSize, long offset) {
-        return PageIterator.of(pageSize,
-                               count(tableName),
-                               QueryWrapper.create()
-                                           .offset(offset),
-                               tableName,
-                               InfluxData::of);
+    public MysqlPager<InfluxData> page(String tableName, Integer pageSize, long offset) {
+        return MysqlPager.of(pageSize,
+                             count(tableName),
+                             QueryWrapper.create()
+                                         .offset(offset),
+                             tableName,
+                             InfluxData::of);
     }
 
     @Override
@@ -124,8 +125,8 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
     }
 
     @Override
-    public boolean strategySupport(BaseDataSourceTemplate<?> strategy) {
-        return StrategySupports.INFLUX.contains(strategy.getClass());
+    public boolean datasourceSupport(BaseDataSourceTemplate<?> strategy) {
+        return DatasourceSupports.INFLUX.contains(strategy.getClass());
     }
 
     @Override
