@@ -5,10 +5,8 @@ import com.wolfhouse.dbmig.enums.MigrateModeEnum;
 import com.wolfhouse.dbmig.enums.TransactionGranularityEnum;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -31,7 +29,7 @@ public class MigrateProperty {
     /** 数据库配置 */
     private Db          db;
     /** 字段配置 */
-    private Field       field       = new Field(null, false);
+    private Field       field       = new Field(null, false, null);
 
     /**
      * 事务配置记录。注意：事务仅支持 MySQL 数据源作为目标源时才会生效
@@ -112,17 +110,12 @@ public class MigrateProperty {
     /**
      * 字段配置
      *
-     * @param ignore 忽略字段
+     * @param ignore     忽略字段
+     * @param ignoreNull 是否忽略空值
+     *
      */
-    public record Field(String[] ignore, boolean ignoreNull) {
-        @Override
-        @NonNull
-        public String toString() {
-            return "Field{" +
-                    "ignore=" + Arrays.toString(ignore) +
-                    ", ignoreNull=" + ignoreNull +
-                    '}';
-        }
+    public record Field(String[] ignore, boolean ignoreNull, FieldCondition condition) {
+
     }
 
     /**
@@ -143,4 +136,12 @@ public class MigrateProperty {
             }
         }
     }
+
+    /**
+     * 字段条件，仅匹配满足条件的字段
+     *
+     * @param equal    相同值匹配，约束指定字段的值为特定值
+     * @param notEqual 不同值匹配，约束指定字段的值不为特定值
+     */
+    public record FieldCondition(Map<String, Object> equal, Map<String, Object> notEqual) {}
 }
