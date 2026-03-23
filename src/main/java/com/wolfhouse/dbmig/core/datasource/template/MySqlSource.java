@@ -44,16 +44,18 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         if (!propertySupport(prop)) {
             throw new IllegalArgumentException("不支持该数据源配置: %s".formatted(prop.getClass()));
         }
-        MySqlProperty    mysqlProp = (MySqlProperty) prop;
-        HikariDataSource ds        = new HikariDataSource();
+        MySqlProperty mysqlProp = (MySqlProperty) prop;
+        // 根据配置创建数据源
+        HikariDataSource ds = new HikariDataSource();
         ds.setUsername(mysqlProp.getUsername());
         ds.setPassword(mysqlProp.getPassword());
         ds.setJdbcUrl("jdbc:mysql://%s:%s/%s".formatted(mysqlProp.getHost(), mysqlProp.getPort(), mysqlProp.getDatabase()));
         ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
         // 兼容 Spring Boot 环境
-        FlexDataSource defaultDs = FlexGlobalConfig.getDefaultConfig().getDataSource();
-        if (defaultDs != null) {
-            defaultDs.addDataSource(MigConstant.DATASOURCE_KEY, ds);
+        FlexGlobalConfig globalConfig  = FlexGlobalConfig.getDefaultConfig();
+        Configuration    configuration = globalConfig.getConfiguration();
+        if (configuration != null) {
+            globalConfig.getDataSource().addDataSource(MigConstant.DATASOURCE_KEY, ds);
             return;
         }
         // 回落保底
