@@ -34,6 +34,8 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
     private String       timeFormat;
     /** 标签列 */
     private Set<String>  tagFields;
+    /** 单次插入数据时，允许的最大字节数 */
+    private Long         allowedBufferSize;
 
     @Override
     public void initDatasource(BaseDbProperty prop) {
@@ -41,6 +43,7 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
             throw new IllegalArgumentException("不支持该数据源配置: %s".formatted(prop.getClass()));
         }
         InfluxProperty influxProp = (InfluxProperty) prop;
+        // 初始化客户端
         client = new InfluxClient(
                 InfluxDBClient.getInstance(
                         "http://%s:%s".formatted(influxProp.getHost(), influxProp.getPort()),
@@ -55,6 +58,8 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
         if (tagFieldsMap != null) {
             tagFields = Set.copyOf(tagFieldsMap.values());
         }
+        // 初始化允许的最大字节数
+        allowedBufferSize = influxProp.getBufferSize();
         log.debug("Influx 数据源初始化完成");
     }
 
@@ -176,10 +181,10 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
      * @return 每批次插入数量
      */
     private int calcPageSize(Collection<InfluxData> data) {
-        if (CollectionUtils.isEmpty(data)) {
+        if (CollectionUtils.isEmpty(data) || allowedBufferSize <= 0) {
             return 0;
         }
-        return (int) Math.ceil((double) 10_000 / String.valueOf(data.iterator().next()).length());
+        return (int) Math.ceil((double) allowedBufferSize / String.valueOf(data.iterator().next()).length());
     }
 
     /**
