@@ -10,6 +10,7 @@ import com.wolfhouse.dbmig.properties.InfluxProperty;
 import com.wolfhouse.influxclient.client.InfluxClient;
 import com.wolfhouse.influxclient.core.InfluxQueryWrapper;
 import com.wolfhouse.influxclient.pojo.*;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
@@ -160,6 +161,14 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
     @Override
     public Class<InfluxData> getDataClazz() {
         return InfluxData.class;
+    }
+
+    @Override
+    @PreDestroy
+    public void close() {
+        if (client != null) {
+            client.close();
+        }
     }
 
     /**

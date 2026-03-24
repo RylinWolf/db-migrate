@@ -38,13 +38,17 @@ import java.util.function.Supplier;
 public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     @Setter
     @Getter
-    private boolean ignoreNull = false;
+    private boolean          ignoreNull = false;
+    /** 当前使用的数据源 */
+    private HikariDataSource currentDs;
 
     @Override
     public void initDatasource(BaseDbProperty prop) {
         if (!propertySupport(prop)) {
             throw new IllegalArgumentException("不支持该数据源配置: %s".formatted(prop.getClass()));
         }
+        // 若当前使用的数据源未关闭，则先关闭
+        close();
         MySqlProperty mysqlProp = (MySqlProperty) prop;
         // 根据配置创建数据源
         HikariDataSource ds = new HikariDataSource();
@@ -64,6 +68,7 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
                             .addDataSource(MigConstant.DATASOURCE_KEY, ds)
                             .setLogImpl(Slf4jImpl.class)
                             .start();
+        currentDs = ds;
     }
 
     @Override
@@ -177,6 +182,13 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     @Override
     public Class<MySqlData> getDataClazz() {
         return MySqlData.class;
+    }
+
+    @Override
+    public void close() {
+        if (currentDs != null && !currentDs.isClosed()) {
+            currentDs.close();
+        }
     }
 
     private String buildTable(String tableName, Collection<String> cols) {
