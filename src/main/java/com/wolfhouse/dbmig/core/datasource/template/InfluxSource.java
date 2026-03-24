@@ -1,10 +1,9 @@
 package com.wolfhouse.dbmig.core.datasource.template;
 
 import com.influxdb.v3.client.InfluxDBClient;
-import com.mybatisflex.core.query.QueryWrapper;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.InfluxData;
-import com.wolfhouse.dbmig.core.datasource.template.page.MysqlPager;
+import com.wolfhouse.dbmig.core.datasource.template.page.InfluxPager;
 import com.wolfhouse.dbmig.properties.BaseDbProperty;
 import com.wolfhouse.dbmig.properties.InfluxProperty;
 import com.wolfhouse.influxclient.client.InfluxClient;
@@ -86,13 +85,12 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
     }
 
     @Override
-    public MysqlPager<InfluxData> page(String tableName, Integer pageSize, long offset) {
-        return MysqlPager.of(pageSize,
-                             count(tableName),
-                             QueryWrapper.create()
-                                         .offset(offset),
-                             tableName,
-                             InfluxData::of);
+    public InfluxPager page(String tableName, Integer pageSize, long offset) {
+        return InfluxPager.of(pageSize,
+                              count(tableName),
+                              InfluxQueryWrapper.create().modify().offset(offset).getParent(),
+                              tableName,
+                              InfluxData::of);
     }
 
     @Override
@@ -215,29 +213,45 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
      * @return AbstractActionInfluxObj
      */
     private AbstractActionInfluxObj createObj(InfluxData data, String tableName) {
-        return new AbstractActionInfluxObj() {{
-            // 移除排除字段
-            Map<String, Object> ignoredMap  = processIgnore(data).toMap();
-            InfluxExtractData   extractData = extractData(ignoredMap);
-            // 设置标签
-            addTags(InfluxTags.of(extractData.tags));
-            // 设置字段
-            addFields(InfluxFields.of(extractData.fields));
-            // 若传递了时间字段，则设置时间
-            Object time = data.getData().get(timeField);
-            if (timeField != null && time != null) {
-                // 按照时间格式解析
-                Instant instant = timeFormat == null ?
-                        Instant.parse(time.toString()) :
-                        LocalDateTime.parse(time.toString(), DateTimeFormatter.ofPattern(timeFormat))
-                                     .atZone(ZoneId.systemDefault())
-                                     .toInstant();
-
-                setTime(instant);
+        return new AbstractActionInfluxObj() {
+            {
+                // 移除排除字段
+                Map<String, Object> ignoredMap  = processIgnore(data).toMap();
+                InfluxExtractData   extractData = extractData(ignoredMap);
+                // 设置标签
+                addTags(InfluxTags.of(extractData.tags));
+                // 设置字段
+                addFields(InfluxFields.of(extractData.fields));
+                // 设置表名
+                setMeasurement(tableName);
+                // 若传递了时间字段，则设置时间
+                Object time = data.getData().get(timeField);
+                setTime(solveTimeField(time));
             }
-            // 设置表名
-            setMeasurement(tableName);
-        }};
+        };
+    }
+
+    /**
+     * 处理时间字段。若传递了时间，则使用指定时间，否则使用当前时间。
+     * <p>
+     * 使用指定的时间字段获取时间，若时间字段为字符串，则尝试使用指定的时间格式解析。
+     *
+     * @param time 时间数据
+     * @return Instant 实例
+     */
+    private Instant solveTimeField(Object time) {
+        if (time == null) {
+            return Instant.now();
+        }
+        if (Instant.class.isAssignableFrom(time.getClass())) {
+            return (Instant) time;
+        }
+        // 按照时间格式解析
+        return timeFormat == null ?
+                Instant.parse(time.toString()) :
+                LocalDateTime.parse(time.toString(), DateTimeFormatter.ofPattern(timeFormat))
+                             .atZone(ZoneId.systemDefault())
+                             .toInstant();
     }
 
     record InfluxExtractData(Map<String, String> tags, Map<String, Object> fields) {}

@@ -4,6 +4,7 @@ import com.wolfhouse.dbmig.core.datasource.sourcedata.InfluxData;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.MySqlData;
 import com.wolfhouse.dbmig.properties.MigrateProperty;
 
+import java.time.Instant;
 import java.time.temporal.Temporal;
 import java.util.Map;
 
@@ -19,7 +20,7 @@ public class MySql2InfluxConverter implements SubConverter<MySqlData, InfluxData
         map.forEach((k, v) -> {
             // 特殊处理时间字段
             if (Temporal.class.isAssignableFrom(v.getClass())) {
-                map.put(k, v.toString());
+                map.put(k, Instant.from((Temporal) v));
             }
         });
         return InfluxData.of(map);
