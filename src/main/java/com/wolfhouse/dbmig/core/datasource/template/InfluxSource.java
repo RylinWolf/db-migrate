@@ -171,6 +171,7 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
     public void close() {
         if (client != null) {
             client.close();
+            log.debug("Influx 数据源已关闭");
         }
     }
 

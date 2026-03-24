@@ -13,7 +13,7 @@ import java.util.*;
  * @author Rylin Wolf
  */
 @SuppressWarnings({"BooleanMethodIsAlwaysInverted"})
-public abstract class BaseDataSourceTemplate<R extends BaseSourceData> {
+public abstract class BaseDataSourceTemplate<R extends BaseSourceData> implements AutoCloseable {
     /** 要忽略字段 */
     protected final Set<String> ignore;
     /** 是否忽略空值 */
@@ -169,11 +169,6 @@ public abstract class BaseDataSourceTemplate<R extends BaseSourceData> {
      * @return 数据对象类型
      */
     public abstract Class<R> getDataClazz();
-
-    /**
-     * 关闭数据源
-     */
-    public abstract void close();
 
     /**
      * 表信息封装

@@ -1,7 +1,9 @@
 package com.wolfhouse.dbmig.properties;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
@@ -12,6 +14,8 @@ import java.util.Map;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@AllArgsConstructor
+@NoArgsConstructor
 public class InfluxProperty extends BaseDbProperty {
     private String              host       = "localhost";
     private String              port       = "8181";

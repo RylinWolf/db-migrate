@@ -89,18 +89,22 @@ public class MigrateExecutor {
             return;
         }
         log.info("开始数据同步");
-        BaseDataSourceTemplate<?>  source   = context.sourceTemplate();
-        BaseDataSourceTemplate<?>  dest     = context.destTemplate();
-        MigrateProperty.Pagination pageConf = context.pagination();
+        try (BaseDataSourceTemplate<?> source = context.sourceTemplate()) {
+            try (BaseDataSourceTemplate<?> dest = context.destTemplate()) {
+                MigrateProperty.Pagination pageConf = context.pagination();
 
-        // 遍历表信息映射，事务级别 任务
-        wrapTransaction(TransactionGranularityEnum.TASK, () -> context
-                .targetTableMap()
-                .values()
-                // 事务级别 表
-                .forEach(table -> wrapTransaction(
-                        TransactionGranularityEnum.TABLE,
-                        () -> syncTable(source, dest, table, pageConf))));
+                // 遍历表信息映射，事务级别 任务
+                wrapTransaction(TransactionGranularityEnum.TASK, () -> context
+                        .targetTableMap()
+                        .values()
+                        // 事务级别 表
+                        .forEach(table -> wrapTransaction(
+                                TransactionGranularityEnum.TABLE,
+                                () -> syncTable(source, dest, table, pageConf))));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         // 阻塞等待所有任务完成
         CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new))
                          .join();

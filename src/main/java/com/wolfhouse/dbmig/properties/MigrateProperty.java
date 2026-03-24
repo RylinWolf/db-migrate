@@ -3,7 +3,9 @@ package com.wolfhouse.dbmig.properties;
 import com.wolfhouse.dbmig.enums.DbTypeEnum;
 import com.wolfhouse.dbmig.enums.MigrateModeEnum;
 import com.wolfhouse.dbmig.enums.TransactionGranularityEnum;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -17,6 +19,8 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "mig")
 @Data
 @Slf4j
+@AllArgsConstructor
+@NoArgsConstructor
 public class MigrateProperty {
     /** 启动时加载配置 */
     private boolean     onStart     = false;

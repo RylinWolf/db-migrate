@@ -36,4 +36,16 @@ public class DatasourceContext {
     /** 查找数据偏移量，跳过 offset 条数据 */
     private long offset;
     // endregion
+
+    /**
+     * 关闭所有数据源
+     */
+    public void closeAllDatasource() throws Exception {
+        if (sourceTemplate != null) {
+            sourceTemplate.close();
+        }
+        if (destTemplate != null) {
+            destTemplate.close();
+        }
+    }
 }

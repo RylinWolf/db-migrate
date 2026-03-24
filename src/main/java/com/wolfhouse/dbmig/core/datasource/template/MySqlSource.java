@@ -56,19 +56,18 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         ds.setPassword(mysqlProp.getPassword());
         ds.setJdbcUrl("jdbc:mysql://%s:%s/%s".formatted(mysqlProp.getHost(), mysqlProp.getPort(), mysqlProp.getDatabase()));
         ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        // 兼容 Spring Boot 环境
-        FlexGlobalConfig globalConfig  = FlexGlobalConfig.getDefaultConfig();
-        Configuration    configuration = globalConfig.getConfiguration();
-        if (configuration != null) {
-            globalConfig.getDataSource().addDataSource(MigConstant.DATASOURCE_KEY, ds);
+        // 配置当前数据源
+        currentDs = ds;
+        // 兼容非 Spring Boot 环境
+        if (initFlexBootstrap(ds)) {
             return;
         }
-        // 回落保底
-        MybatisFlexBootstrap.getInstance()
-                            .addDataSource(MigConstant.DATASOURCE_KEY, ds)
-                            .setLogImpl(Slf4jImpl.class)
-                            .start();
-        currentDs = ds;
+        FlexGlobalConfig globalConfig  = FlexGlobalConfig.getDefaultConfig();
+        Configuration    configuration = globalConfig.getConfiguration();
+        if (configuration == null) {
+            throw new RuntimeException("FlexGlobalConfig 配置意外为空");
+        }
+        globalConfig.getDataSource().addDataSource(MigConstant.DATASOURCE_KEY, ds);
     }
 
     @Override
@@ -186,9 +185,16 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
 
     @Override
     public void close() {
+        // 移除数据源
+        FlexGlobalConfig config = FlexGlobalConfig.getDefaultConfig();
+        if (config != null && config.getConfiguration() != null) {
+            config.getDataSource().removeDatasource(MigConstant.DATASOURCE_KEY);
+        }
         if (currentDs != null && !currentDs.isClosed()) {
             currentDs.close();
+            log.debug("MySql 数据源已关闭");
         }
+        currentDs = null;
     }
 
     private String buildTable(String tableName, Collection<String> cols) {
@@ -208,5 +214,28 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         } finally {
             DataSourceKey.clear();
         }
+    }
+
+    /**
+     * 内部私有方法：处理 MyBatis-Flex 引擎的首次启动
+     * 采用双重检查锁（DCL）确保线程安全
+     *
+     * @return 是否进行了初始化
+     */
+    private boolean initFlexBootstrap(HikariDataSource ds) {
+        if (FlexGlobalConfig.getDefaultConfig().getConfiguration() == null) {
+            synchronized (MybatisFlexBootstrap.class) {
+                if (FlexGlobalConfig.getDefaultConfig().getConfiguration() == null) {
+                    log.debug("MyBatis-Flex 引擎未启动，正在执行首次初始化...");
+                    MybatisFlexBootstrap.getInstance()
+                                        .setLogImpl(Slf4jImpl.class)
+                                        .addDataSource(MigConstant.DATASOURCE_KEY, ds)
+                                        .start();
+                    return true;
+                    // 此时 ds 已经通过 start() 注册进去了，不需要额外 add
+                }
+            }
+        }
+        return false;
     }
 }

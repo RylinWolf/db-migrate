@@ -1,7 +1,9 @@
 package com.wolfhouse.dbmig.properties;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * MySQL 数据库配置
@@ -10,6 +12,8 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@AllArgsConstructor
+@NoArgsConstructor
 public class MySqlProperty extends BaseDbProperty {
     private String host     = "localhost";
     private String port     = "3306";
