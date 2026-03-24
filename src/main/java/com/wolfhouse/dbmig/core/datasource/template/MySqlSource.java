@@ -90,7 +90,7 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         return dataSourceKeySurround(() -> Db.paginate(tableName, pageNum, pageSize, QueryWrapper.create().offset(offset))
                                              .getRecords()
                                              .stream()
-                                             .map(r -> processIgnore(MySqlData.of(r.toCamelKeysMap())))
+                                             .map(r -> processIgnore(MySqlData.of(r.toUnderlineKeysMap())))
                                              .toList());
     }
 
@@ -124,7 +124,7 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
             return Set.of();
         }
         return Set.copyOf(rows.stream()
-                              .map(r -> String.valueOf(r.toCamelKeysMap().get("field")))
+                              .map(r -> String.valueOf(r.toUnderlineKeysMap().get("field")))
                               .toList());
     }
 
@@ -162,7 +162,7 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
                                              .stream()
                                              .skip(offset)
                                              // 移除排除字段
-                                             .map(r -> processIgnore(MySqlData.of(r.toCamelKeysMap())))
+                                             .map(r -> processIgnore(MySqlData.of(r.toUnderlineKeysMap())))
                                              .toList());
     }
 
