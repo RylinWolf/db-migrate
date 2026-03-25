@@ -3,6 +3,7 @@ package com.wolfhouse.dbmig.core.datasource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wolfhouse.dbmig.core.DatasourceContext;
 import com.wolfhouse.dbmig.core.datasource.adaptor.AdaptorFactory;
+import com.wolfhouse.dbmig.core.datasource.strategy.condition.ConditionFactory;
 import com.wolfhouse.dbmig.core.datasource.template.BaseDataSourceTemplate;
 import com.wolfhouse.dbmig.enums.DbTypeEnum;
 import com.wolfhouse.dbmig.enums.MigrateModeEnum;
@@ -50,19 +51,28 @@ public class DatasourceInitializer {
      * @param prop 迁移配置
      */
     public void initUsing(MigrateProperty prop) {
-        // 0. 校验配置
+        // 0.先关闭已连接的数据源
+        try {
+            context.closeAllDatasource();
+        } catch (Exception e) {
+            log.error("关闭数据源失败", e);
+            throw new RuntimeException(e);
+        }
+        // 1. 校验配置
         propValid(prop);
-        // 1. 加载配置
+        // 2. 加载配置
         loadConfig(prop);
         loadDefaultConf(prop);
-        // 2. 加载数据源
+        // 3. 加载数据源
         loadSource(prop);
-        // 3. 根据配置参数，获取目标数据表信息
+        // 4. 根据配置参数，获取目标数据表信息
         loadDestTables(prop);
-        // 4. 数据就绪
+        // 5. 数据就绪
         context.ready(true);
-        // 5. 初始化适配器工厂
+        // 6. 初始化适配器工厂
         AdaptorFactory.init(prop.getField());
+        // 7. 初始化条件工厂
+        ConditionFactory.init(prop.getCore().sourceType());
     }
 
     /**
