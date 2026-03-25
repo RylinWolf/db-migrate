@@ -90,12 +90,12 @@ public class MigrateExecutor {
         BaseDataSourceTemplate<?>  dest     = context.destTemplate();
         MigrateProperty.Pagination pageConf = context.pagination();
 
-        // 本次同步添加的表
-        Set<String> tableAdded = new HashSet<>();
+        // 本次同步添加的表，若任务执行失败则需要删除
+        Set<String> tableRemove = new HashSet<>();
         // DDL 可能触发隐式提交，先在事务外初始化目标表结构
         context.targetTableMap().values().forEach(table -> {
             if (initSchemaSafe(dest, table)) {
-                tableAdded.add(table.alias());
+                tableRemove.add(table.alias());
             }
         });
 
@@ -108,9 +108,13 @@ public class MigrateExecutor {
                                          .forEach(table -> wrapTransaction(
                                                  TransactionGranularityEnum.TABLE,
                                                  () -> syncTable(source, dest, table, pageConf))));
+            // 运行成功，则清空需要删除的表
+            tableRemove.clear();
         } catch (Exception e) {
             log.error("数据同步失败", e);
-            for (String s : tableAdded) {
+            throw e;
+        } finally {
+            for (String s : tableRemove) {
                 try {
                     dest.removeSchema(s);
                 } catch (UnsupportedOperationException ignored) {
@@ -119,7 +123,6 @@ public class MigrateExecutor {
                     log.error("删除表失败: {}", s, e2);
                 }
             }
-            throw e;
         }
         // 阻塞等待所有任务完成
         CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new))

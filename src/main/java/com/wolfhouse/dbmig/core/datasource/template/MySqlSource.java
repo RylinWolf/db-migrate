@@ -49,11 +49,9 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     private final String                         currentDatasourceKey;
     @Setter
     @Getter
-    private       boolean                        ignoreNull        = false;
+    private       boolean                        ignoreNull = false;
     /** 基础查询构造器 */
     private       QueryWrapper                   baseQueryWrapper;
-    /** 基础查询构造器使用标识 */
-    private       boolean                        isWrapperConsumed = false;
     /** 字段条件配置 */
     private       MigrateProperty.FieldCondition fieldCondition;
     /** 当前使用的数据源 */
@@ -132,8 +130,6 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         }
         conditions.addAll(cList);
         fieldCondition = condition;
-        // 初始化条件构造器
-        processCondition();
     }
 
     @Override
@@ -328,18 +324,14 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         return DataSourceKey.use(this.currentDatasourceKey, supplier);
     }
 
-
+    /**
+     * 获取查询构造器
+     *
+     * @return 查询构造器
+     */
     private QueryWrapper queryWrapper() {
-        // 若未使用过，则直接返回
-        if (!isWrapperConsumed) {
-            isWrapperConsumed = true;
-            return baseQueryWrapper;
-        }
-
-        // 使用过，更新并置否
         // 处理条件，在其中初始化了 queryWrapper
         processCondition();
-        isWrapperConsumed = false;
         return baseQueryWrapper;
     }
 }
