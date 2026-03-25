@@ -104,6 +104,9 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
 
     @Override
     protected void doCondition(Condition<?, ?, ?> c) {
+        if (fieldCondition == null) {
+            return;
+        }
         // MySQL 字段值等于
         if (c instanceof MysqlEqual equal) {
             Map<String, Object> equalMap = fieldCondition.equal();
