@@ -160,8 +160,13 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
     }
 
     @Override
-    public void createSchema(String name, Collection<String> cols) {
+    public boolean createSchema(String name, Collection<String> cols) {
         throw new UnsupportedOperationException("Influx 数据源不支持创建表架构");
+    }
+
+    @Override
+    public void removeSchema(String tableName) {
+        throw new UnsupportedOperationException("Influx 数据源不支持删除表架构");
     }
 
     @Override

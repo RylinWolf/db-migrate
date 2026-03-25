@@ -32,6 +32,9 @@ public class InfluxAdaptor extends BaseDataAdaptor<InfluxData> {
 
     @Override
     public <S extends BaseSourceData> InfluxData adaptFrom(S obj) {
+        if (obj instanceof InfluxData) {
+            return (InfluxData) obj;
+        }
         SubConverter<S, InfluxData> converter = (SubConverter<S, InfluxData>)
                 ConverterFactory.getConverter(InfluxData.class, obj.getClass());
 

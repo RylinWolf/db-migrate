@@ -9,6 +9,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * 数据源模板，规范要处理的数据库的操作。
@@ -118,7 +119,7 @@ public abstract class BaseDataSourceTemplate<R extends BaseSourceData> implement
      * @param name 表名
      * @param cols 列集合
      */
-    public abstract void createSchema(String name, Collection<String> cols);
+    public abstract boolean createSchema(String name, Collection<String> cols);
 
     /**
      * 全量查询指定表的所有记录
@@ -199,6 +200,30 @@ public abstract class BaseDataSourceTemplate<R extends BaseSourceData> implement
      * @return 数据对象类型
      */
     public abstract Class<R> getDataClazz();
+
+    /**
+     * 在数据源上下文中执行逻辑。默认实现直接执行，特定数据源可重写。
+     */
+    public <T> T withDataSourceContext(Supplier<T> supplier) {
+        return supplier.get();
+    }
+
+    /**
+     * 在数据源上下文中执行无返回值逻辑。
+     */
+    public void withDataSourceContext(Runnable runnable) {
+        withDataSourceContext(() -> {
+            runnable.run();
+            return null;
+        });
+    }
+
+    /**
+     * 删除表结构
+     *
+     * @param tableName 表名
+     */
+    public abstract void removeSchema(String tableName);
 
     /**
      * 表信息封装

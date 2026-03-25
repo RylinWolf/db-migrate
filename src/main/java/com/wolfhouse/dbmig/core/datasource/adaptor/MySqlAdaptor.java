@@ -20,7 +20,8 @@ public class MySqlAdaptor extends BaseDataAdaptor<MySqlData> {
     private static final Set<Class<? extends BaseSourceData>> SUPPORTED_FROM;
 
     static {
-        SUPPORTED_FROM = Set.of(InfluxData.class);
+        SUPPORTED_FROM = Set.of(InfluxData.class,
+                                MySqlData.class);
     }
 
     @Override
@@ -30,6 +31,9 @@ public class MySqlAdaptor extends BaseDataAdaptor<MySqlData> {
 
     @Override
     public <T extends BaseSourceData> MySqlData adaptFrom(T obj) {
+        if (obj instanceof MySqlData) {
+            return (MySqlData) obj;
+        }
         SubConverter<T, MySqlData> converter = (SubConverter<T, MySqlData>) ConverterFactory.getConverter(MySqlData.class, obj.getClass());
         return converter.convert(obj, null);
     }

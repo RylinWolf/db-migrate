@@ -3,6 +3,7 @@ package com.wolfhouse.dbmig.core.datasource.template;
 import com.mybatisflex.core.FlexGlobalConfig;
 import com.mybatisflex.core.MybatisFlexBootstrap;
 import com.mybatisflex.core.datasource.DataSourceKey;
+import com.mybatisflex.core.datasource.FlexDataSource;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
 import com.mybatisflex.core.row.Row;
@@ -24,6 +25,7 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.logging.slf4j.Slf4jImpl;
 import org.apache.ibatis.session.Configuration;
+import org.jspecify.annotations.NonNull;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -43,17 +45,23 @@ import java.util.function.Supplier;
 @Slf4j
 @Accessors(fluent = true)
 public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
+    /** 当前数据源键 */
+    private final String                         currentDatasourceKey;
     @Setter
     @Getter
-    private boolean                        ignoreNull        = false;
+    private       boolean                        ignoreNull        = false;
     /** 基础查询构造器 */
-    private QueryWrapper                   baseQueryWrapper;
+    private       QueryWrapper                   baseQueryWrapper;
     /** 基础查询构造器使用标识 */
-    private boolean                        isWrapperConsumed = false;
+    private       boolean                        isWrapperConsumed = false;
     /** 字段条件配置 */
-    private MigrateProperty.FieldCondition fieldCondition;
+    private       MigrateProperty.FieldCondition fieldCondition;
     /** 当前使用的数据源 */
-    private HikariDataSource               currentDs;
+    private       HikariDataSource               currentDs;
+
+    {
+        currentDatasourceKey = MigConstant.DATASOURCE_KEY + "_" + System.currentTimeMillis();
+    }
 
     @Override
     public void initDatasource(BaseDbProperty prop) {
@@ -62,7 +70,27 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         }
         // 若当前使用的数据源未关闭，则先关闭
         close();
-        MySqlProperty mysqlProp = (MySqlProperty) prop;
+        MySqlProperty  mysqlProp = (MySqlProperty) prop;
+        FlexDataSource ds        = getDatasource(mysqlProp);
+        // 兼容未使用 SpringBoot 自动配置数据源的环境
+        if (initBootstrap(ds)) {
+            return;
+        }
+        FlexGlobalConfig globalConfig  = FlexGlobalConfig.getDefaultConfig();
+        Configuration    configuration = globalConfig.getConfiguration();
+        if (configuration == null) {
+            throw new RuntimeException("FlexGlobalConfig 配置意外为空");
+        }
+        globalConfig.getDataSource().addDataSource(currentDatasourceKey, ds);
+    }
+
+    /**
+     * 根据配置创建并返回数据源
+     *
+     * @param mysqlProp 指定配置
+     * @return Flex 数据源
+     */
+    private @NonNull FlexDataSource getDatasource(MySqlProperty mysqlProp) {
         // 根据配置创建数据源
         HikariDataSource ds = new HikariDataSource();
         ds.setUsername(mysqlProp.getUsername());
@@ -71,16 +99,29 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
         ds.setDriverClassName("com.mysql.cj.jdbc.Driver");
         // 配置当前数据源
         currentDs = ds;
-        // 兼容非 Spring Boot 环境
-        if (initFlexBootstrap(ds)) {
-            return;
+        return new FlexDataSource(currentDatasourceKey, ds);
+    }
+
+    /**
+     * 内部私有方法：处理 MyBatis-Flex 引擎的首次启动
+     * 采用双重检查锁（DCL）确保线程安全
+     *
+     * @return 是否进行了初始化
+     */
+    private boolean initBootstrap(FlexDataSource ds) {
+        if (FlexGlobalConfig.getDefaultConfig().getConfiguration() == null) {
+            synchronized (MybatisFlexBootstrap.class) {
+                if (FlexGlobalConfig.getDefaultConfig().getConfiguration() == null) {
+                    log.debug("MyBatis-Flex 引擎首次启动，正在初始化");
+                    MybatisFlexBootstrap.getInstance()
+                                        .setLogImpl(Slf4jImpl.class)
+                                        .addDataSource(this.currentDatasourceKey, ds)
+                                        .start();
+                    return true;
+                }
+            }
         }
-        FlexGlobalConfig globalConfig  = FlexGlobalConfig.getDefaultConfig();
-        Configuration    configuration = globalConfig.getConfiguration();
-        if (configuration == null) {
-            throw new RuntimeException("FlexGlobalConfig 配置意外为空");
-        }
-        globalConfig.getDataSource().addDataSource(MigConstant.DATASOURCE_KEY, ds);
+        return false;
     }
 
     @Override
@@ -137,13 +178,14 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
                 row.putAll(processIgnore(m).toMap());
                 return row;
             }).toList();
-            DataSourceKey.use(MigConstant.DATASOURCE_KEY, () -> {
-                Db.insertBatch(tableName, rowList);
+            dataSourceKeySurround(() -> {
+                rowList.forEach(row -> Db.insert(tableName, row));
+                return null;
             });
             return true;
         } catch (Exception e) {
             log.error("批量添加数据失败！", e);
-            return false;
+            throw e;
         }
     }
 
@@ -211,11 +253,23 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     }
 
     @Override
-    public void createSchema(String name, Collection<String> cols) {
+    public boolean createSchema(String name, Collection<String> cols) {
         if (!StringUtils.hasLength(name) || CollectionUtils.isEmpty(cols)) {
+            return false;
+        }
+        if (hasTable(name)) {
+            return false;
+        }
+        dataSourceKeySurround(() -> Db.updateBySql(buildTable(name, cols)));
+        return true;
+    }
+
+    @Override
+    public void removeSchema(String tableName) {
+        if (!StringUtils.hasLength(tableName)) {
             return;
         }
-        DataSourceKey.use(MigConstant.DATASOURCE_KEY, () -> Db.updateBySql(buildTable(name, cols)));
+        dataSourceKeySurround(() -> Db.deleteBySql("DROP TABLE IF EXISTS `%s`".formatted(tableName)));
     }
 
     @Override
@@ -242,11 +296,16 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     }
 
     @Override
+    public <T> T withDataSourceContext(Supplier<T> supplier) {
+        return dataSourceKeySurround(supplier);
+    }
+
+    @Override
     public void close() {
         // 移除数据源
         FlexGlobalConfig config = FlexGlobalConfig.getDefaultConfig();
         if (config != null && config.getConfiguration() != null) {
-            config.getDataSource().removeDatasource(MigConstant.DATASOURCE_KEY);
+            config.getDataSource().removeDatasource(this.currentDatasourceKey);
         }
         if (currentDs != null && !currentDs.isClosed()) {
             currentDs.close();
@@ -266,36 +325,9 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     }
 
     private <T> T dataSourceKeySurround(Supplier<T> supplier) {
-        try {
-            DataSourceKey.use(MigConstant.DATASOURCE_KEY);
-            return supplier.get();
-        } finally {
-            DataSourceKey.clear();
-        }
+        return DataSourceKey.use(this.currentDatasourceKey, supplier);
     }
 
-    /**
-     * 内部私有方法：处理 MyBatis-Flex 引擎的首次启动
-     * 采用双重检查锁（DCL）确保线程安全
-     *
-     * @return 是否进行了初始化
-     */
-    private boolean initFlexBootstrap(HikariDataSource ds) {
-        if (FlexGlobalConfig.getDefaultConfig().getConfiguration() == null) {
-            synchronized (MybatisFlexBootstrap.class) {
-                if (FlexGlobalConfig.getDefaultConfig().getConfiguration() == null) {
-                    log.debug("MyBatis-Flex 引擎未启动，正在执行首次初始化...");
-                    MybatisFlexBootstrap.getInstance()
-                                        .setLogImpl(Slf4jImpl.class)
-                                        .addDataSource(MigConstant.DATASOURCE_KEY, ds)
-                                        .start();
-                    return true;
-                    // 此时 ds 已经通过 start() 注册进去了，不需要额外 add
-                }
-            }
-        }
-        return false;
-    }
 
     private QueryWrapper queryWrapper() {
         // 若未使用过，则直接返回
