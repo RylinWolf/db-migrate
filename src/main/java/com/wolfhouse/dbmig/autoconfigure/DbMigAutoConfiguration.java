@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Import;
 @EnableConfigurationProperties(MigrateProperty.class)
 @Import(ObjectMapperConfig.class)
 public class DbMigAutoConfiguration {
-    @Bean
+    @Bean(destroyMethod = "closeAllDatasource")
     @ConditionalOnMissingBean
     public DatasourceContext datasourceContext() {
         return new DatasourceContext();
