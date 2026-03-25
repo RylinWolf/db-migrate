@@ -148,6 +148,8 @@ public class DatasourceInitializer {
             }
             // 配置忽略空字段
             template.setIgnoreNull(field.ignoreNull());
+            // 配置条件字段配置
+            template.initCondition(field.condition());
             return template;
         } catch (Exception e) {
             throw new RuntimeException(e);
