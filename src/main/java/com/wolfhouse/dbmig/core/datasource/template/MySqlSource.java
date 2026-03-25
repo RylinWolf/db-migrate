@@ -9,8 +9,13 @@ import com.mybatisflex.core.row.Row;
 import com.wolfhouse.dbmig.constant.MigConstant;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.MySqlData;
+import com.wolfhouse.dbmig.core.datasource.strategy.condition.Condition;
+import com.wolfhouse.dbmig.core.datasource.strategy.condition.ConditionFactory;
+import com.wolfhouse.dbmig.core.datasource.strategy.condition.impl.MysqlEqual;
+import com.wolfhouse.dbmig.core.datasource.strategy.condition.impl.MysqlNotEqual;
 import com.wolfhouse.dbmig.core.datasource.template.page.MysqlPager;
 import com.wolfhouse.dbmig.properties.BaseDbProperty;
+import com.wolfhouse.dbmig.properties.MigrateProperty;
 import com.wolfhouse.dbmig.properties.MySqlProperty;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
@@ -38,9 +43,13 @@ import java.util.function.Supplier;
 public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     @Setter
     @Getter
-    private boolean          ignoreNull = false;
+    private boolean                        ignoreNull = false;
+    /** 基础查询构造器 */
+    private QueryWrapper                   baseQueryWrapper;
+    /** 字段条件配置 */
+    private MigrateProperty.FieldCondition fieldCondition;
     /** 当前使用的数据源 */
-    private HikariDataSource currentDs;
+    private HikariDataSource               currentDs;
 
     @Override
     public void initDatasource(BaseDbProperty prop) {
@@ -68,6 +77,34 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
             throw new RuntimeException("FlexGlobalConfig 配置意外为空");
         }
         globalConfig.getDataSource().addDataSource(MigConstant.DATASOURCE_KEY, ds);
+    }
+
+    @Override
+    public void initCondition(MigrateProperty.FieldCondition condition) {
+        conditions.addAll(ConditionFactory.getCondition(MySqlSource.class));
+    }
+    
+    @Override
+    protected void doCondition(Condition<?, ?, ?> c) {
+        // MySQL 字段值等于
+        if (c instanceof MysqlEqual equal) {
+            Map<String, Object> equalMap = fieldCondition.equal();
+            if (CollectionUtils.isEmpty(equalMap)) {
+                return;
+            }
+            equal.perform(baseQueryWrapper, equalMap);
+            return;
+        }
+        // MySQL 字段值不等于
+        if (c instanceof MysqlNotEqual notEqual) {
+            Map<String, Object> notEqualMap = fieldCondition.notEqual();
+            if (CollectionUtils.isEmpty(notEqualMap)) {
+                return;
+            }
+            notEqual.perform(baseQueryWrapper, notEqualMap);
+            return;
+        }
+        log.error("MySql 数据源未配置的条件类型：{}", c.getClass().getSimpleName());
     }
 
     @Override

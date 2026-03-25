@@ -3,9 +3,12 @@ package com.wolfhouse.dbmig.core.datasource.template;
 import com.influxdb.v3.client.InfluxDBClient;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
 import com.wolfhouse.dbmig.core.datasource.sourcedata.InfluxData;
+import com.wolfhouse.dbmig.core.datasource.strategy.condition.Condition;
+import com.wolfhouse.dbmig.core.datasource.strategy.condition.ConditionFactory;
 import com.wolfhouse.dbmig.core.datasource.template.page.InfluxPager;
 import com.wolfhouse.dbmig.properties.BaseDbProperty;
 import com.wolfhouse.dbmig.properties.InfluxProperty;
+import com.wolfhouse.dbmig.properties.MigrateProperty;
 import com.wolfhouse.influxclient.client.InfluxClient;
 import com.wolfhouse.influxclient.core.InfluxQueryWrapper;
 import com.wolfhouse.influxclient.pojo.*;
@@ -61,6 +64,15 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
         // 初始化允许的最大字节数
         allowedBufferSize = influxProp.getBufferSize();
         log.debug("Influx 数据源初始化完成");
+    }
+
+    @Override
+    public void initCondition(MigrateProperty.FieldCondition condition) {
+        conditions.addAll(ConditionFactory.getCondition(InfluxSource.class));
+    }
+
+    @Override
+    protected void doCondition(Condition<?, ?, ?> condition) {
     }
 
     @Override

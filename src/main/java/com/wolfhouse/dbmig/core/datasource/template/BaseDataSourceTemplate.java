@@ -1,9 +1,12 @@
 package com.wolfhouse.dbmig.core.datasource.template;
 
 import com.wolfhouse.dbmig.core.datasource.sourcedata.BaseSourceData;
+import com.wolfhouse.dbmig.core.datasource.strategy.condition.Condition;
 import com.wolfhouse.dbmig.core.datasource.template.page.BasePageIterator;
 import com.wolfhouse.dbmig.properties.BaseDbProperty;
+import com.wolfhouse.dbmig.properties.MigrateProperty;
 import org.jspecify.annotations.NonNull;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
@@ -15,12 +18,15 @@ import java.util.*;
 @SuppressWarnings({"BooleanMethodIsAlwaysInverted"})
 public abstract class BaseDataSourceTemplate<R extends BaseSourceData> implements AutoCloseable {
     /** 要忽略字段 */
-    protected final Set<String> ignore;
+    protected final Set<String>              ignore;
+    /** 要处理的条件集合 */
+    protected final List<Condition<?, ?, ?>> conditions;
     /** 是否忽略空值 */
-    protected       boolean     ignoreNull = false;
+    protected       boolean                  ignoreNull = false;
 
     {
-        ignore = new HashSet<>();
+        ignore     = new HashSet<>();
+        conditions = new ArrayList<>();
     }
 
     /**
@@ -29,6 +35,13 @@ public abstract class BaseDataSourceTemplate<R extends BaseSourceData> implement
      * @param prop 数据源连接信息
      */
     public abstract void initDatasource(BaseDbProperty prop);
+
+    /**
+     * 初始化条件约束，应当通过条件工厂获取当前类的所有条件并保存至 conditions。
+     *
+     * @param condition 条件配置
+     */
+    public abstract void initCondition(MigrateProperty.FieldCondition condition);
 
     /**
      * 批量插入数据
@@ -162,6 +175,23 @@ public abstract class BaseDataSourceTemplate<R extends BaseSourceData> implement
     public BaseSourceData processIgnore(BaseSourceData data) {
         return data.removeIf(entry -> checkIgnore(entry.getKey(), entry.getValue()));
     }
+
+    /**
+     * 处理条件约束
+     */
+    public void processCondition() {
+        if (CollectionUtils.isEmpty(conditions)) {
+            return;
+        }
+        this.conditions.forEach(this::doCondition);
+    }
+
+    /**
+     * 处理单个条件约束
+     *
+     * @param condition 条件约束
+     */
+    protected abstract void doCondition(Condition<?, ?, ?> condition);
 
     /**
      * 获取当前数据源数据对象类型
