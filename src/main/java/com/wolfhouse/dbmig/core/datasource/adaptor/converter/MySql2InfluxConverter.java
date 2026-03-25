@@ -41,11 +41,11 @@ public class MySql2InfluxConverter implements SubConverter<MySqlData, InfluxData
             return null;
         }
         if (Instant.class.isAssignableFrom(vClass)) {
-            return Instant.from((Temporal) v);
+            return Instant.from((Temporal) v).toString();
         }
         if (LocalDateTime.class.isAssignableFrom(vClass)) {
             LocalDateTime vDateTime = (LocalDateTime) v;
-            return vDateTime.atZone(ZoneOffset.UTC).toInstant();
+            return vDateTime.atZone(ZoneOffset.UTC).toInstant().toString();
         }
         return v.toString();
     }

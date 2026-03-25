@@ -18,6 +18,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,12 +31,12 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class MigrateExecutor {
     /** 数据源上下文 */
-    private final DatasourceContext          context;
-    private       ThreadPoolTaskExecutor     taskExecutor;
+    private final DatasourceContext           context;
+    private       ThreadPoolTaskExecutor      taskExecutor;
     /** 失败任务列表 */
-    private       List<Runnable>             rejectedTasks;
+    private       List<Runnable>              rejectedTasks;
     /** 正在进行的任务列表 */
-    private       List<CompletableFuture<?>> tasks = new ArrayList<>();
+    private       Queue<CompletableFuture<?>> tasks = new ConcurrentLinkedQueue<>();
 
     @PostConstruct
     void init() {
@@ -68,6 +69,7 @@ public class MigrateExecutor {
             if (!done) {
                 log.error("线程池繁忙，重试次数耗尽仍无法执行任务");
                 rejectedTasks.add(r);
+                throw new RuntimeException("线程池繁忙，重试次数耗尽仍无法执行任务");
             }
         });
         taskExecutor.initialize();
@@ -93,11 +95,18 @@ public class MigrateExecutor {
         // 本次同步添加的表，若任务执行失败则需要删除
         Set<String> tableRemove = new HashSet<>();
         // DDL 可能触发隐式提交，先在事务外初始化目标表结构
-        context.targetTableMap().values().forEach(table -> {
-            if (initSchemaSafe(dest, table)) {
-                tableRemove.add(table.alias());
+        for (BaseDataSourceTemplate.TableInfo table : context.targetTableMap().values()) {
+            try {
+                if (initSchemaSafe(dest, table)) {
+                    tableRemove.add(table.alias());
+                }
+            } catch (UnsupportedOperationException ignored) {
+                log.debug("架构为构建：数据源 {} 不支持构建架构", dest.getClass().getSimpleName());
+                break;
+            } catch (Exception e) {
+                log.error("架构构建失败: {}", table.name(), e);
             }
-        });
+        }
 
         // 遍历表信息映射，事务级别 任务
         try {
@@ -110,10 +119,14 @@ public class MigrateExecutor {
                                                  () -> syncTable(source, dest, table, pageConf))));
             // 运行成功，则清空需要删除的表
             tableRemove.clear();
-        } catch (Exception e) {
-            log.error("数据同步失败", e);
-            throw e;
         } finally {
+            // 阻塞等待所有任务完成
+            try {
+                CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new))
+                                 .join();
+            } catch (Exception e) {
+                log.error("任务执行异常", e);
+            }
             for (String s : tableRemove) {
                 try {
                     dest.removeSchema(s);
@@ -124,9 +137,6 @@ public class MigrateExecutor {
                 }
             }
         }
-        // 阻塞等待所有任务完成
-        CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new))
-                         .join();
         log.info("数据同步结束");
     }
 
@@ -134,15 +144,8 @@ public class MigrateExecutor {
     private boolean initSchemaSafe(BaseDataSourceTemplate<?> dest, BaseDataSourceTemplate.TableInfo table) {
         String tableName = table.name();
         String alias     = table.alias();
-        try {
-            return initSchema(dest, table, alias, tableName);
-        } catch (UnsupportedOperationException ignored) {
-            log.debug("架构为构建：数据源 {} 不支持构建架构", dest.getClass().getSimpleName());
-            return false;
-        } catch (Exception e) {
-            log.error("架构构建失败", e);
-            throw e;
-        }
+        return initSchema(dest, table, alias, tableName);
+
     }
 
     /**
@@ -154,8 +157,14 @@ public class MigrateExecutor {
      * @param tableName 源表名
      */
     private boolean initSchema(BaseDataSourceTemplate<?> dest, BaseDataSourceTemplate.TableInfo table, String alias, String tableName) {
+        // 此处尝试获取表是否存在，但 NoSQL 数据库可能仅在首次保存数据时创建，所以默认表不存在并进行异常捕捉
+        boolean hasTable = false;
+        try {
+            hasTable = dest.hasTable(alias);
+        } catch (Exception ignored) {
+        }
         // 表名不存在，构建架构
-        if (!dest.hasTable(alias)) {
+        if (!hasTable) {
             log.debug("目标表 {} 不存在，创建架构。 源: {}，列: {}", alias, tableName, table.cols());
             List<String> colList = new ArrayList<>(Arrays.asList(table.cols()));
             colList.remove("id");
@@ -254,7 +263,7 @@ public class MigrateExecutor {
             Collection<T> convertedData = adaptor.adaptFrom(data);
             if (!dest.insertBatch(aliasName, convertedData)) {
                 log.error("数据写入失败！table: {}, alias: {}, data size: {}", tableName, aliasName, data.size());
-                throw new RuntimeException(String.format("数据写入失败，已触发回滚。table: %s, alias: %s", tableName, aliasName));
+                throw new RuntimeException(String.format("数据写入失败。table: %s, alias: %s", tableName, aliasName));
             }
         });
     }
@@ -281,7 +290,7 @@ public class MigrateExecutor {
             try {
                 runnable.run();
             } catch (Exception e) {
-                log.error("事务执行时出现异常，执行回滚。当前事务等级: {}", currentLevel, e);
+                log.error("事务执行时出现异常。当前事务等级: {}", currentLevel, e);
                 throw e;
             }
             return true;
