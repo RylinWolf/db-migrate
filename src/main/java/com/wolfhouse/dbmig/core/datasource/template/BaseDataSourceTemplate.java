@@ -11,7 +11,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.*;
 
 /**
- * 数据源策略，规范要处理的数据库的操作
+ * 数据源模板，规范要处理的数据库的操作。
  *
  * @author Rylin Wolf
  */

@@ -63,16 +63,16 @@ public class DatasourceInitializer {
         // 2. 加载配置
         loadConfig(prop);
         loadDefaultConf(prop);
-        // 3. 加载数据源
-        loadSource(prop);
-        // 4. 根据配置参数，获取目标数据表信息
-        loadDestTables(prop);
-        // 5. 数据就绪
-        context.ready(true);
-        // 6. 初始化适配器工厂
-        AdaptorFactory.init(prop.getField());
-        // 7. 初始化条件工厂
+        // 3. 初始化条件工厂
         ConditionFactory.init(prop.getCore().sourceType());
+        // 4. 加载数据源
+        loadSource(prop);
+        // 5. 根据配置参数，获取目标数据表信息
+        loadDestTables(prop);
+        // 6. 数据就绪
+        context.ready(true);
+        // 7. 初始化适配器工厂
+        AdaptorFactory.init(prop.getField());
     }
 
     /**

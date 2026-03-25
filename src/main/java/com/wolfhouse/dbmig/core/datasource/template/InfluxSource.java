@@ -68,7 +68,11 @@ public class InfluxSource extends BaseDataSourceTemplate<InfluxData> {
 
     @Override
     public void initCondition(MigrateProperty.FieldCondition condition) {
-        conditions.addAll(ConditionFactory.getCondition(InfluxSource.class));
+        List<Condition<?, ?, ?>> cList = ConditionFactory.getCondition(InfluxSource.class);
+        if (CollectionUtils.isEmpty(cList)) {
+            return;
+        }
+        conditions.addAll(cList);
     }
 
     @Override

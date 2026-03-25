@@ -37,7 +37,7 @@ public class DbMigAutoConfiguration {
         return new DatasourceInitializer(migrateProperty, objectMapper, datasourceContext);
     }
 
-    @Bean
+    @Bean(destroyMethod = "destroy")
     @ConditionalOnMissingBean
     public MigrateExecutor migrateExecutor(DatasourceContext datasourceContext) {
         return new MigrateExecutor(datasourceContext);

@@ -34,7 +34,9 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /**
- * MySQL 数据源
+ * MySQL 数据源。
+ * 注意，该数据源线程不安全！
+ * 在并发环境中应当使用多例创建。
  *
  * @author Rylin Wolf
  */
@@ -43,9 +45,11 @@ import java.util.function.Supplier;
 public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
     @Setter
     @Getter
-    private boolean                        ignoreNull = false;
+    private boolean                        ignoreNull        = false;
     /** 基础查询构造器 */
     private QueryWrapper                   baseQueryWrapper;
+    /** 基础查询构造器使用标识 */
+    private boolean                        isWrapperConsumed = false;
     /** 字段条件配置 */
     private MigrateProperty.FieldCondition fieldCondition;
     /** 当前使用的数据源 */
@@ -81,9 +85,23 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
 
     @Override
     public void initCondition(MigrateProperty.FieldCondition condition) {
-        conditions.addAll(ConditionFactory.getCondition(MySqlSource.class));
+        List<Condition<?, ?, ?>> cList = ConditionFactory.getCondition(MySqlSource.class);
+        if (CollectionUtils.isEmpty(cList)) {
+            return;
+        }
+        conditions.addAll(cList);
+        fieldCondition = condition;
+        // 初始化条件构造器
+        processCondition();
     }
-    
+
+    @Override
+    public void processCondition() {
+        // 初始化查询构造器
+        baseQueryWrapper = QueryWrapper.create();
+        super.processCondition();
+    }
+
     @Override
     protected void doCondition(Condition<?, ?, ?> c) {
         // MySQL 字段值等于
@@ -128,7 +146,7 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
 
     @Override
     public List<MySqlData> queryBatch(String tableName, int pageSize, int pageNum, long offset) {
-        return dataSourceKeySurround(() -> Db.paginate(tableName, pageNum, pageSize, QueryWrapper.create().offset(offset))
+        return dataSourceKeySurround(() -> Db.paginate(tableName, pageNum, pageSize, queryWrapper().offset(offset))
                                              .getRecords()
                                              .stream()
                                              .map(r -> processIgnore(MySqlData.of(r.toUnderlineKeysMap())))
@@ -137,12 +155,12 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
 
     @Override
     public MysqlPager<MySqlData> page(String tableName, Integer pageSize, long offset) {
-        return MysqlPager.of(pageSize, count(tableName), QueryWrapper.create().offset(offset), tableName, MySqlData::of);
+        return MysqlPager.of(pageSize, count(tableName), queryWrapper().offset(offset), tableName, MySqlData::of);
     }
 
     @Override
     public long count(String tableName) {
-        return dataSourceKeySurround(() -> Db.selectCountByQuery(tableName, QueryWrapper.create()));
+        return dataSourceKeySurround(() -> Db.selectCountByQuery(tableName, queryWrapper()));
     }
 
     @Override
@@ -199,7 +217,7 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
 
     @Override
     public Collection<MySqlData> queryAll(String tableName, long offset) {
-        return dataSourceKeySurround(() -> Db.selectAll(tableName)
+        return dataSourceKeySurround(() -> Db.selectListByQuery(tableName, queryWrapper())
                                              .stream()
                                              .skip(offset)
                                              // 移除排除字段
@@ -274,5 +292,19 @@ public class MySqlSource extends BaseDataSourceTemplate<MySqlData> {
             }
         }
         return false;
+    }
+
+    private QueryWrapper queryWrapper() {
+        // 若未使用过，则直接返回
+        if (!isWrapperConsumed) {
+            isWrapperConsumed = true;
+            return baseQueryWrapper;
+        }
+
+        // 使用过，更新并置否
+        // 处理条件，在其中初始化了 queryWrapper
+        processCondition();
+        isWrapperConsumed = false;
+        return baseQueryWrapper;
     }
 }
