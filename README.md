@@ -14,7 +14,9 @@
 - 支持通过 `offset` 从指定偏移位置继续迁移，便于断点续跑或跳过历史数据。
 - 支持分页拉取、批量写入和并行执行，适合中到大规模数据迁移场景。
 - 支持全局字段忽略和 `null` 值过滤。
+- 支持字段值条件过滤（`equal` / `not-equal`），可按字段值筛选源数据。
 - Influx 目标端支持将指定字段写入时间列与 tag 列。
+- Influx 目标端支持按 `buffer-size` 控制单批次写入分片大小。
 - MySQL 目标端支持按字段名自动创建基础表结构。
 - 事务配置仅对 MySQL 目标端生效。
 
@@ -112,6 +114,11 @@ mig:
       - createTime
       - updateTime
     ignore-null: false
+    condition:
+      equal:
+        status: 1
+      not-equal:
+        deleted: 1
 
   transaction:
     enable: false
@@ -171,8 +178,10 @@ mig:
 | `mig.pagination.critical` | 超过该记录数时启用分页 | 未配置时默认 `200` |
 | `mig.field.ignore` | 全局忽略字段列表 | - |
 | `mig.field.ignore-null` | 是否忽略值为 `null` 的字段 | `false` |
+| `mig.field.condition.equal` | 字段值“等于”过滤条件（字段名 -> 值） | - |
+| `mig.field.condition.not-equal` | 字段值“不等于”过滤条件（字段名 -> 值） | - |
 | `mig.transaction.enable` | 是否启用事务 | `false` |
-| `mig.transaction.gran` | 事务粒度 | `PAGE`、`TASK` |
+| `mig.transaction.gran` | 事务粒度 | `PAGE`、`TABLE`、`TASK` |
 
 ### MySQL 连接参数
 
@@ -192,6 +201,7 @@ mig:
 | `port` | Influx 端口 | `8181` |
 | `database` | 数据库名 / bucket 标识 | `dbMig` |
 | `token` | 访问令牌 | 读取环境变量 `INFLUX_TOKEN` |
+| `buffer-size` | 单次写入允许的最大字节数，用于计算分批写入大小 | `10000` |
 | `time-field` | 将源记录中的哪个字段写为 Influx 时间列 | - |
 | `time-format` | 自定义时间解析格式；未配置时按 `Instant.parse` 解析 | - |
 | `tag-fields` | tag 字段映射，当前实现会读取映射的 `value` 作为 tag 字段名 | - |
@@ -227,6 +237,27 @@ mig:
       offset: 50000
 ```
 
+## 字段条件过滤
+
+当前版本支持在 `mig.field.condition` 下配置字段值过滤规则，仅迁移满足条件的数据记录。
+
+- `equal`：字段值必须等于指定值。
+- `not-equal`：字段值必须不等于指定值。
+- 目前内置实现主要作用于 MySQL 源端查询条件构建（`WHERE` 子句）。
+
+示例：
+
+```yaml
+mig:
+  field:
+    condition:
+      equal:
+        status: 1
+        tenant_id: 1001
+      not-equal:
+        deleted: 1
+```
+
 ## Influx 目标端行为
 
 当目标端类型为 `influx` 时，`InfluxSource` 的写入行为如下：
@@ -236,6 +267,7 @@ mig:
 - `time-format` 已配置时，时间值会按 `DateTimeFormatter.ofPattern(time-format)` 解析，再按系统时区转换为 `Instant`。
 - `tag-fields` 用于区分哪些列写入 tag；未命中的列继续作为普通 field 写入。
 - 如果未配置 `tag-fields`，则所有业务列都按 field 写入。
+- `buffer-size` 用于估算单批写入量：值越大，单批包含的点位越多。
 
 ## 架构概览
 
@@ -270,10 +302,13 @@ mig:
   - [x] 支持按照正则匹配源表名
   - [x] 支持设置偏移量，从指定偏移量开始同步数据
   - [ ] 支持可选字段
+  - [x] 支持字段条件过滤（`equal` / `not-equal`）
   - [x] 新增数据适配器，包括不同类型数据对象的互相转换，重构 Influx 数据源，使用新的数据对象
   - [x] 支持 Influx 时间字段配置 `timeField`
   - [x] 支持 Influx 自定义时间解析格式 `timeFormat`
   - [x] 支持 Influx tag 字段映射 `tagFields`
+  - [x] 支持 Influx 写入缓冲大小配置 `bufferSize`
+  - [x] 事务粒度扩展，支持 `TABLE`
   - [ ] 更灵活的配置方式，通过 picocli 交互式补充文件中未填的配置项
 - [ ] 第三阶段：工具扩展
   - [ ] 实现更多可选的源数据库
