@@ -4,7 +4,8 @@
 [![Java Version](https://img.shields.io/badge/Java-23-orange.svg)](https://www.oracle.com/java/technologies/javase/jdk23-archive-downloads.html)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.7-brightgreen.svg)](https://spring.io/projects/spring-boot)
 
-`db-migrate` 是一个基于 Spring Boot 3.5 的轻量级异构数据迁移工具，当前聚焦于 MySQL 与 InfluxDB 之间的数据同步。项目使用策略模式、模板方法和适配器机制组织数据源实现，便于按现有结构继续扩展新的数据库类型。
+`db-migrate` 是一个基于 Spring Boot 3.5 的轻量级异构数据迁移工具，当前聚焦于 MySQL 与 InfluxDB
+之间的数据同步。项目使用策略模式、模板方法和适配器机制组织数据源实现，便于按现有结构继续扩展新的数据库类型。
 
 ## 核心特性
 
@@ -53,9 +54,10 @@ mvn spring-boot:run
 
 1. 引入 `dbmig` 依赖。
 2. 在自己的 `application.yml` 中配置 `mig.*`。
-3. 将 `mig.on-start` 设为 `true`，应用启动后就会自动执行迁移。
+3. 将 `mig.on-start` 设为 `true`，应用启动后就会自动进行环境初始化。
 
-项目已经通过 Spring Boot AutoConfiguration 自动注册 Bean，不需要下游额外编写 `@ComponentScan`、`@Import` 或手动创建执行器 Bean。
+项目已经通过 Spring Boot AutoConfiguration 自动注册 Bean，不需要下游额外编写 `@ComponentScan`、`@Import` 或手动创建执行器
+Bean。
 
 仓库中的本地调试配置文件 `migConf.yml` 不会被打进依赖包；请把真实配置写在下游应用自己的配置文件里。
 
@@ -161,50 +163,50 @@ mig:
 
 ### 通用迁移配置
 
-| 配置项 | 说明 | 默认值 / 可选值 |
-|:--|:--|:--|
-| `mig.on-start` | 应用启动后是否立即执行迁移 | `false` |
-| `mig.core.mode` | 迁移模式 | `db`、`table` |
-| `mig.core.table.tables` | 按表迁移时显式指定的表名列表 | - |
-| `mig.core.table.pattern` | 按表迁移时用于匹配源表名的正则列表 | - |
-| `mig.core.table.alias-map` | 表名映射，格式为 `源表名:目标表名` | - |
-| `mig.core.table.offset` | 从第几条记录之后开始迁移 | `0` |
-| `mig.core.source-type` | 源数据源类型 | `mysql`、`influx` |
-| `mig.core.dest-type` | 目标数据源类型 | `mysql`、`influx` |
-| `mig.db.source` | 源端连接参数，字段结构随 `source-type` 变化 | - |
-| `mig.db.dest` | 目标端连接参数，字段结构随 `dest-type` 变化 | - |
-| `mig.pagination.enable` | 是否启用分页 | `true` 时启用分页逻辑 |
-| `mig.pagination.size` | 分页大小 | 未配置时默认 `200` |
-| `mig.pagination.critical` | 超过该记录数时启用分页 | 未配置时默认 `200` |
-| `mig.field.ignore` | 全局忽略字段列表 | - |
-| `mig.field.ignore-null` | 是否忽略值为 `null` 的字段 | `false` |
-| `mig.field.condition.equal` | 字段值“等于”过滤条件（字段名 -> 值） | - |
-| `mig.field.condition.not-equal` | 字段值“不等于”过滤条件（字段名 -> 值） | - |
-| `mig.transaction.enable` | 是否启用事务 | `false` |
-| `mig.transaction.gran` | 事务粒度 | `PAGE`、`TABLE`、`TASK` |
+| 配置项                             | 说明                            | 默认值 / 可选值             |
+|:--------------------------------|:------------------------------|:----------------------|
+| `mig.on-start`                  | 应用启动后是否立即执行迁移                 | `false`               |
+| `mig.core.mode`                 | 迁移模式                          | `db`、`table`          |
+| `mig.core.table.tables`         | 按表迁移时显式指定的表名列表                | -                     |
+| `mig.core.table.pattern`        | 按表迁移时用于匹配源表名的正则列表             | -                     |
+| `mig.core.table.alias-map`      | 表名映射，格式为 `源表名:目标表名`           | -                     |
+| `mig.core.table.offset`         | 从第几条记录之后开始迁移                  | `0`                   |
+| `mig.core.source-type`          | 源数据源类型                        | `mysql`、`influx`      |
+| `mig.core.dest-type`            | 目标数据源类型                       | `mysql`、`influx`      |
+| `mig.db.source`                 | 源端连接参数，字段结构随 `source-type` 变化 | -                     |
+| `mig.db.dest`                   | 目标端连接参数，字段结构随 `dest-type` 变化  | -                     |
+| `mig.pagination.enable`         | 是否启用分页                        | `true` 时启用分页逻辑        |
+| `mig.pagination.size`           | 分页大小                          | 未配置时默认 `200`          |
+| `mig.pagination.critical`       | 超过该记录数时启用分页                   | 未配置时默认 `200`          |
+| `mig.field.ignore`              | 全局忽略字段列表                      | -                     |
+| `mig.field.ignore-null`         | 是否忽略值为 `null` 的字段             | `false`               |
+| `mig.field.condition.equal`     | 字段值“等于”过滤条件（字段名 -> 值）         | -                     |
+| `mig.field.condition.not-equal` | 字段值“不等于”过滤条件（字段名 -> 值）        | -                     |
+| `mig.transaction.enable`        | 是否启用事务                        | `false`               |
+| `mig.transaction.gran`          | 事务粒度                          | `PAGE`、`TABLE`、`TASK` |
 
 ### MySQL 连接参数
 
-| 配置项 | 说明 | 默认值 |
-|:--|:--|:--|
-| `host` | MySQL 主机地址 | `localhost` |
-| `port` | MySQL 端口 | `3306` |
-| `database` | 数据库名 | - |
-| `username` | 用户名 | `root` |
-| `password` | 密码 | - |
+| 配置项        | 说明         | 默认值         |
+|:-----------|:-----------|:------------|
+| `host`     | MySQL 主机地址 | `localhost` |
+| `port`     | MySQL 端口   | `3306`      |
+| `database` | 数据库名       | -           |
+| `username` | 用户名        | `root`      |
+| `password` | 密码         | -           |
 
 ### Influx 连接参数
 
-| 配置项 | 说明 | 默认值 |
-|:--|:--|:--|
-| `host` | Influx 主机地址 | `localhost` |
-| `port` | Influx 端口 | `8181` |
-| `database` | 数据库名 / bucket 标识 | `dbMig` |
-| `token` | 访问令牌 | 读取环境变量 `INFLUX_TOKEN` |
-| `buffer-size` | 单次写入允许的最大字节数，用于计算分批写入大小 | `10000` |
-| `time-field` | 将源记录中的哪个字段写为 Influx 时间列 | - |
-| `time-format` | 自定义时间解析格式；未配置时按 `Instant.parse` 解析 | - |
-| `tag-fields` | tag 字段映射，当前实现会读取映射的 `value` 作为 tag 字段名 | - |
+| 配置项           | 说明                                     | 默认值                   |
+|:--------------|:---------------------------------------|:----------------------|
+| `host`        | Influx 主机地址                            | `localhost`           |
+| `port`        | Influx 端口                              | `8181`                |
+| `database`    | 数据库名 / bucket 标识                       | `dbMig`               |
+| `token`       | 访问令牌                                   | 读取环境变量 `INFLUX_TOKEN` |
+| `buffer-size` | 单次写入允许的最大字节数，用于计算分批写入大小                | `10000`               |
+| `time-field`  | 将源记录中的哪个字段写为 Influx 时间列                | -                     |
+| `time-format` | 自定义时间解析格式；未配置时按 `Instant.parse` 解析     | -                     |
+| `tag-fields`  | tag 字段映射，当前实现会读取映射的 `value` 作为 tag 字段名 | -                     |
 
 ## 表模式增强
 
@@ -290,36 +292,36 @@ mig:
 因精力有限，目前将项目分为四个阶段开发：
 
 - [x] 第一阶段：MySQL -> InfluxDB 数据迁移，从 MySQL 中获取指定的数据，存储入 InfluxDB 指定 measurement 中
-  - [x] 提供 MySQL 至 InfluxDB 的数据映射功能
-  - [x] 通过配置文件设置数据库用户名、密码、源库、源表等信息
-  - [x] 支持按表/数据库导入，支持批量指定表名
-  - [x] 支持排除字段
-  - [x] 支持分页参数配置
-  - [x] 通过开关控制是否启动时同步加载配置
+    - [x] 提供 MySQL 至 InfluxDB 的数据映射功能
+    - [x] 通过配置文件设置数据库用户名、密码、源库、源表等信息
+    - [x] 支持按表/数据库导入，支持批量指定表名
+    - [x] 支持排除字段
+    - [x] 支持分页参数配置
+    - [x] 通过开关控制是否启动时同步加载配置
 - [ ] 第二阶段：工具增强
-  - [x] 重构架构，增加灵活性、可扩展性
-  - [x] 支持目标表重命名
-  - [x] 支持按照正则匹配源表名
-  - [x] 支持设置偏移量，从指定偏移量开始同步数据
-  - [ ] 支持可选字段
-  - [x] 支持字段条件过滤（`equal` / `not-equal`）
-  - [x] 新增数据适配器，包括不同类型数据对象的互相转换，重构 Influx 数据源，使用新的数据对象
-  - [x] 支持 Influx 时间字段配置 `timeField`
-  - [x] 支持 Influx 自定义时间解析格式 `timeFormat`
-  - [x] 支持 Influx tag 字段映射 `tagFields`
-  - [x] 支持 Influx 写入缓冲大小配置 `bufferSize`
-  - [x] 事务粒度扩展，支持 `TABLE`
-  - [ ] 更灵活的配置方式，通过 picocli 交互式补充文件中未填的配置项
+    - [x] 重构架构，增加灵活性、可扩展性
+    - [x] 支持目标表重命名
+    - [x] 支持按照正则匹配源表名
+    - [x] 支持设置偏移量，从指定偏移量开始同步数据
+    - [ ] 支持可选字段
+    - [x] 支持字段条件过滤（`equal` / `not-equal`）
+    - [x] 新增数据适配器，包括不同类型数据对象的互相转换，重构 Influx 数据源，使用新的数据对象
+    - [x] 支持 Influx 时间字段配置 `timeField`
+    - [x] 支持 Influx 自定义时间解析格式 `timeFormat`
+    - [x] 支持 Influx tag 字段映射 `tagFields`
+    - [x] 支持 Influx 写入缓冲大小配置 `bufferSize`
+    - [x] 事务粒度扩展，支持 `TABLE`
+    - [ ] 更灵活的配置方式，通过 picocli 交互式补充文件中未填的配置项
 - [ ] 第三阶段：工具扩展
-  - [ ] 实现更多可选的源数据库
-  - [ ] 实现更多可选的目标数据库
-  - [ ] 进一步增加数据库兼容，兼容更多的数据库类型
-  - [ ] 改造为 SDK，完成 API 文档
-  - [ ] 设计并实现灵活自定义的导入规则
+    - [ ] 实现更多可选的源数据库
+    - [ ] 实现更多可选的目标数据库
+    - [ ] 进一步增加数据库兼容，兼容更多的数据库类型
+    - [ ] 改造为 SDK，完成 API 文档
+    - [ ] 设计并实现灵活自定义的导入规则
 - [ ] 第四阶段：项目重构
-  - [ ] 重构底层实现，增强工具可用性
-  - [ ] 数据库增量同步功能，设计同步器架构
-  - [ ] 完善任务编排、断点恢复与更细粒度同步能力
+    - [ ] 重构底层实现，增强工具可用性
+    - [ ] 数据库增量同步功能，设计同步器架构
+    - [ ] 完善任务编排、断点恢复与更细粒度同步能力
 
 ## 开源协议
 
