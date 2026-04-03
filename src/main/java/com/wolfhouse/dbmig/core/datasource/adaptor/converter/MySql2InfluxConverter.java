@@ -36,6 +36,9 @@ public class MySql2InfluxConverter implements SubConverter<MySqlData, InfluxData
      * @return 若数据可封装为 Instant，则返回为 Instant。若数据为时间，则返回字符串，否则返回 null。
      */
     private Object processInstant(Object v) {
+        if (v == null) {
+            return null;
+        }
         Class<?> vClass = v.getClass();
         if (!Temporal.class.isAssignableFrom(vClass)) {
             return null;
